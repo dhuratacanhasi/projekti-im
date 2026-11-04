@@ -67,8 +67,17 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>UniBite</Text>
-      <Text style={styles.subtitle}>Restorantet në Mitrovicë</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.heading}>UniBite</Text>
+          <Text style={styles.subtitle}>Restorantet në Mitrovicë</Text>
+        </View>
+        <Link href="/add-restaurant" asChild>
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.addButtonText}>+ Shto</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
 
       <FlatList
         data={restaurants}
@@ -113,18 +122,32 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f9f9f9",
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
   heading: {
     fontSize: 32,
     fontWeight: "bold",
     color: "#FF6B35",
-    textAlign: "center",
-    marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
     color: "#666",
-    textAlign: "center",
-    marginBottom: 20,
+  },
+  addButton: {
+    backgroundColor: "#FF6B35",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   listContent: {
     padding: 16,
