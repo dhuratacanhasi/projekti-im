@@ -1,11 +1,13 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { MenuItem } from "@/types";
+import { useCart } from "@/context/CartContext";
 
 export default function RestaurantDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { addToCart } = useCart();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -95,6 +97,21 @@ export default function RestaurantDetail() {
               <Text style={styles.description}>{item.description_sq || item.description}</Text>
             )}
             {item.category && <Text style={styles.category}>{item.category}</Text>}
+            <TouchableOpacity
+              style={styles.addToCartButton}
+              onPress={() => {
+                addToCart({
+                  menuItemId: item.id,
+                  name: item.name_sq || item.name || "",
+                  price: Number(item.price),
+                  quantity: 1,
+                  restaurantId: id as string,
+                });
+                Alert.alert("Shtuar", "Produkti u shtua në shportë");
+              }}
+            >
+              <Text style={styles.addToCartButtonText}>+ Shto në shportë</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
@@ -163,6 +180,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     textTransform: "uppercase",
+    marginBottom: 10,
+  },
+  addToCartButton: {
+    backgroundColor: "#FF6B35",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  addToCartButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   loadingText: {
     marginTop: 10,

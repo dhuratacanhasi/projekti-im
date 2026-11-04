@@ -3,8 +3,10 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, Touchabl
 import { Link, useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Restaurant } from "@/types";
+import { useCart } from "@/context/CartContext";
 
 export default function Home() {
+  const { itemCount } = useCart();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -80,11 +82,18 @@ export default function Home() {
           <Text style={styles.heading}>UniBite</Text>
           <Text style={styles.subtitle}>Restorantet në Mitrovicë</Text>
         </View>
-        <Link href="/add-restaurant" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.addButtonText}>+ Shto</Text>
-          </TouchableOpacity>
-        </Link>
+        <View style={styles.headerButtons}>
+          <Link href="/cart" asChild>
+            <TouchableOpacity style={styles.cartButton}>
+              <Text style={styles.cartButtonText}>🛒 {itemCount}</Text>
+            </TouchableOpacity>
+          </Link>
+          <Link href="/add-restaurant" asChild>
+            <TouchableOpacity style={styles.addButton}>
+              <Text style={styles.addButtonText}>+ Shto</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
 
       <FlatList
@@ -140,6 +149,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
   },
+  headerButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
   heading: {
     fontSize: 32,
     fontWeight: "bold",
@@ -148,6 +161,19 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#666",
+  },
+  cartButton: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FF6B35",
+  },
+  cartButtonText: {
+    color: "#FF6B35",
+    fontSize: 16,
+    fontWeight: "600",
   },
   addButton: {
     backgroundColor: "#FF6B35",
