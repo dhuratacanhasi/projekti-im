@@ -1,17 +1,22 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Link } from "expo-router";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Link, useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Restaurant } from "@/types";
 
 export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchRestaurants() {
+  async function fetchRestaurants(isRefreshing = false) {
     try {
-      setLoading(true);
+      if (isRefreshing) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       const { data, error } = await supabase
         .from("restaurants")
@@ -29,12 +34,15 @@ export default function Home() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
-  useEffect(() => {
-    fetchRestaurants();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchRestaurants();
+    }, [])
+  );
 
   if (loading) {
     return (
@@ -83,6 +91,9 @@ export default function Home() {
         data={restaurants}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => fetchRestaurants(true)} colors={["#FF6B35"]} />
+        }
         renderItem={({ item }) => (
           <Link href={`/restaurant/${item.id}`} asChild>
             <TouchableOpacity style={styles.card}>
