@@ -1,8 +1,21 @@
-import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Link, router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCart } from "@/context/CartContext";
+import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { DEMO_RESTAURANTS } from "@/data/demo";
@@ -12,11 +25,13 @@ import { Restaurant } from "@/types";
 export default function Home() {
   const { itemCount } = useCart();
   const { eshteVizitor, dilSiVizitor } = useVizitori();
+  const { qyteti, ndryshoQytetin } = useLokacioni();
   const tema = useTema();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [zgjedhesiHapur, setZgjedhesiHapur] = useState(false);
 
   async function fetchRestaurants(isRefreshing = false) {
     try {
@@ -59,6 +74,12 @@ export default function Home() {
     }, [eshteVizitor])
   );
 
+  // Restorantet filtrohen sipas qytetit të zgjedhur në krye.
+  const teFiltruara = useMemo(
+    () => restaurants.filter((r) => (r.city ?? "Mitrovicë") === qyteti),
+    [restaurants, qyteti]
+  );
+
   function shtoRestorant() {
     if (eshteVizitor) {
       Alert.alert("Kërkohet llogari", "Për të shtuar restorant duhet të hyni ose të krijoni llogari.", [
@@ -91,14 +112,6 @@ export default function Home() {
     );
   }
 
-  if (restaurants.length === 0) {
-    return (
-      <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
-        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>Nuk ka restorante të disponueshëm</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: tema.sfond }]}>
       <LinearGradient
@@ -107,10 +120,27 @@ export default function Home() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Text style={styles.pershendetje}>Përshëndetje 👋</Text>
-        <Text style={styles.heading}>Çka po hajmë sot?</Text>
+        <View style={styles.headerTop}>
+          <View style={styles.headerTeksti}>
+            <Text style={styles.pershendetje}>Përshëndetje 👋</Text>
+            <Text style={styles.heading}>Çka po hajmë sot?</Text>
+          </View>
+
+          <Pressable
+            style={styles.lokacioni}
+            onPress={() => setZgjedhesiHapur(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Ndrysho qytetin, aktualisht ${qyteti}`}
+          >
+            <Text style={styles.lokacioniEmri} numberOfLines={1}>
+              📍 {qyteti}
+            </Text>
+            <Text style={styles.lokacioniShigjeta}>▾</Text>
+          </Pressable>
+        </View>
+
         <Text style={styles.subtitle}>
-          {eshteVizitor ? "Po shfletoni si vizitor" : "Restorantet në Mitrovicë"}
+          {teFiltruara.length} restorante · {eshteVizitor ? "po shfletoni si vizitor" : "gati për porosi"}
         </Text>
 
         <View style={styles.headerButtons}>
@@ -137,34 +167,107 @@ export default function Home() {
       )}
 
       <FlatList
-        data={restaurants}
+        data={teFiltruara}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => fetchRestaurants(true)} colors={[tema.kryesor]} />
         }
+        ListEmptyComponent={
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyIcon}>🍽️</Text>
+            <Text style={[styles.emptyTitle, { color: tema.tekst }]}>Nuk ka restorante në {qyteti}</Text>
+            <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>
+              Provo një qytet tjetër ose shiko të gjitha restorantet.
+            </Text>
+            <Pressable
+              style={[styles.emptyButton, { backgroundColor: tema.kryesor }]}
+              onPress={() => setZgjedhesiHapur(true)}
+            >
+              <Text style={styles.emptyButtonText}>Ndrysho qytetin</Text>
+            </Pressable>
+          </View>
+        }
         renderItem={({ item }) => (
           <Link href={`/restaurant/${item.id}`} asChild>
-            <TouchableOpacity style={StyleSheet.flatten([styles.card, { backgroundColor: tema.kart }])}>
-              <View style={styles.cardHeader}>
-                <Text style={[styles.restaurantName, { color: tema.tekst }]}>{item.name_sq || item.name}</Text>
-                {item.rating && <Text style={styles.rating}>★ {item.rating}</Text>}
+            <TouchableOpacity style={styles.card} activeOpacity={0.85}>
+              <View style={styles.cardMedia}>
+                {item.image_url ? (
+                  <Image source={{ uri: item.image_url }} style={styles.cardImage} resizeMode="cover" />
+                ) : (
+                  <View style={styles.cardImageFallback}>
+                    <Text style={styles.cardImageFallbackText}>🍽️</Text>
+                  </View>
+                )}
+                <LinearGradient
+                  colors={["transparent", "rgba(46,16,101,0.75)"]}
+                  style={styles.cardOverlay}
+                />
+                {item.rating ? (
+                  <View style={styles.ratingBadge}>
+                    <Text style={styles.ratingBadgeText}>★ {item.rating}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.cardMediaTekst}>
+                  <Text style={styles.restaurantName} numberOfLines={1}>
+                    {item.name_sq || item.name}
+                  </Text>
+                  {item.category ? <Text style={styles.category}>{item.category}</Text> : null}
+                </View>
               </View>
-              {item.category && (
-                <Text style={[styles.category, { color: tema.tekstDytësor }]}>{item.category}</Text>
-              )}
-              <View style={styles.cardFooter}>
-                {item.delivery_time && (
-                  <Text style={[styles.infoText, { color: tema.tekstDytësor }]}>🕒 {item.delivery_time}</Text>
-                )}
-                {item.address && (
-                  <Text style={[styles.infoText, { color: tema.tekstDytësor }]}>📍 {item.address}</Text>
-                )}
+
+              <View style={styles.cardBody}>
+                {item.description_sq ? (
+                  <Text style={[styles.description, { color: tema.tekstDytësor }]} numberOfLines={2}>
+                    {item.description_sq}
+                  </Text>
+                ) : null}
+                <View style={styles.cardFooter}>
+                  {item.delivery_time ? (
+                    <Text style={[styles.infoText, { color: tema.tekstDytësor }]}>🕒 {item.delivery_time}</Text>
+                  ) : null}
+                  {item.city ? (
+                    <Text style={[styles.infoText, { color: tema.tekstDytësor }]}>📍 {item.city}</Text>
+                  ) : null}
+                </View>
               </View>
             </TouchableOpacity>
           </Link>
         )}
       />
+
+      <Modal
+        visible={zgjedhesiHapur}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setZgjedhesiHapur(false)}
+      >
+        <Pressable style={styles.modalSfond} onPress={() => setZgjedhesiHapur(false)}>
+          <Pressable style={styles.modalKarta} onPress={() => {}}>
+            <View style={styles.modalDoreza} />
+            <Text style={styles.modalTitulli}>Zgjidh qytetin</Text>
+            <Text style={styles.modalNentitulli}>Restorantet do të filtrohen sipas qytetit.</Text>
+
+            {QYTETET.map((q) => {
+              const zgjedhur = q === qyteti;
+              return (
+                <Pressable
+                  key={q}
+                  style={[styles.qytetiRresht, zgjedhur && styles.qytetiRreshtZgjedhur]}
+                  onPress={() => {
+                    ndryshoQytetin(q);
+                    setZgjedhesiHapur(false);
+                  }}
+                >
+                  <Text style={[styles.qytetiEmri, zgjedhur && styles.qytetiEmriZgjedhur]}>📍 {q}</Text>
+                  {zgjedhur ? <Text style={styles.qytetiShenja}>✓</Text> : null}
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -188,16 +291,20 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
   },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  headerTeksti: {
+    flex: 1,
+  },
   pershendetje: {
     fontSize: 13,
     fontWeight: "600",
     color: "#DDD6FE",
     letterSpacing: 0.4,
-  },
-  headerButtons: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 16,
   },
   heading: {
     fontSize: 26,
@@ -205,10 +312,39 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     marginTop: 2,
   },
+  lokacioni: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    maxWidth: 150,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginTop: 4,
+  },
+  lokacioniEmri: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+  lokacioniShigjeta: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: "#EDE9FE",
-    marginTop: 2,
+    marginTop: 8,
+  },
+  headerButtons: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 16,
   },
   cartButton: {
     flex: 1,
@@ -252,39 +388,85 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    gap: 12,
+    gap: 16,
+    paddingBottom: 30,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "#2E1065",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  cardMedia: {
+    height: 160,
+    backgroundColor: "#EDE9FE",
+    justifyContent: "flex-end",
+  },
+  cardImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  cardImageFallback: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
-    marginBottom: 6,
+    justifyContent: "center",
+  },
+  cardImageFallbackText: {
+    fontSize: 44,
+  },
+  cardOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  ratingBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  ratingBadgeText: {
+    color: "#B45309",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  cardMediaTekst: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
   restaurantName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2E1065",
-    flex: 1,
-  },
-  rating: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#F59E0B",
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#ffffff",
   },
   category: {
-    fontSize: 14,
-    color: "#6D28D9",
-    marginBottom: 10,
+    fontSize: 13,
+    color: "#EDE9FE",
+    marginTop: 1,
+  },
+  cardBody: {
+    padding: 14,
+    gap: 8,
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 19,
   },
   cardFooter: {
     flexDirection: "row",
@@ -292,8 +474,95 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   infoText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  emptyBox: {
+    alignItems: "center",
+    paddingVertical: 50,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptyButton: {
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  modalSfond: {
+    flex: 1,
+    backgroundColor: "rgba(46,16,101,0.45)",
+    justifyContent: "flex-end",
+  },
+  modalKarta: {
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 32,
+    gap: 6,
+  },
+  modalDoreza: {
+    alignSelf: "center",
+    width: 44,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#DDD6FE",
+    marginBottom: 10,
+  },
+  modalTitulli: {
+    fontSize: 21,
+    fontWeight: "800",
+    color: "#2E1065",
+  },
+  modalNentitulli: {
     fontSize: 13,
     color: "#6D28D9",
+    marginBottom: 10,
+  },
+  qytetiRresht: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  qytetiRreshtZgjedhur: {
+    backgroundColor: "#EDE9FE",
+  },
+  qytetiEmri: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2E1065",
+  },
+  qytetiEmriZgjedhur: {
+    color: "#5B21B6",
+    fontWeight: "800",
+  },
+  qytetiShenja: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#7C3AED",
   },
   loadingText: {
     marginTop: 10,
@@ -322,9 +591,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#6D28D9",
   },
 });

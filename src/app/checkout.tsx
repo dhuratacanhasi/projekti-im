@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 
 import { useCart } from "@/context/CartContext";
+import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 
@@ -21,6 +22,7 @@ type Pagesa = "cash" | "karte";
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const { eshteVizitor, dilSiVizitor } = useVizitori();
+  const { qyteti, ndryshoQytetin } = useLokacioni();
   const tema = useTema();
   const [adresa, setAdresa] = useState("");
   const [telefoni, setTelefoni] = useState("");
@@ -52,7 +54,7 @@ export default function Checkout() {
 
     Alert.alert(
       "Porosia u dërgua",
-      `Adresa: ${adresa.trim()}\nTelefoni: ${telefoni.trim()}\nPagesa: ${metoda}\n${shenimi}\n${rreshtat}\n\nTotali: €${total.toFixed(2)}`,
+      `Qyteti: ${qyteti}\nAdresa: ${adresa.trim()}\nTelefoni: ${telefoni.trim()}\nPagesa: ${metoda}\n${shenimi}\n${rreshtat}\n\nTotali: €${total.toFixed(2)}`,
       [
         {
           text: "OK",
@@ -99,6 +101,40 @@ export default function Checkout() {
         <Text style={[styles.subtitle, { color: tema.tekstDytësor }]}>
           Plotësoni adresën dhe telefonin që dorëzuesi t'ju gjejë.
         </Text>
+
+        <Text style={[styles.label, { color: tema.tekst }]}>Qyteti i dorëzimit</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.qytetetRow}
+        >
+          {QYTETET.map((q) => {
+            const zgjedhur = q === qyteti;
+            return (
+              <TouchableOpacity
+                key={q}
+                style={[
+                  styles.qytetiChip,
+                  {
+                    borderColor: tema.kryesor,
+                    backgroundColor: zgjedhur ? tema.kryesor : tema.kart,
+                  },
+                ]}
+                onPress={() => ndryshoQytetin(q)}
+              >
+                <Text
+                  style={{
+                    color: zgjedhur ? tema.butonTekst : tema.kryesor,
+                    fontWeight: "600",
+                    fontSize: 13,
+                  }}
+                >
+                  {q}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         <Text style={[styles.label, { color: tema.tekst }]}>Adresa / lokacioni i dorëzimit *</Text>
         <TextInput
@@ -222,6 +258,18 @@ const styles = StyleSheet.create({
   pagesaRow: {
     flexDirection: "row",
     gap: 10,
+  },
+  qytetetRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 2,
+    paddingRight: 8,
+  },
+  qytetiChip: {
+    borderWidth: 1.5,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   pagesaButon: {
     flex: 1,

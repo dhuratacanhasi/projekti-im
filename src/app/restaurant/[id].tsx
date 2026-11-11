@@ -1,18 +1,30 @@
-import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  RefreshControl,
+  SectionList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCart } from "@/context/CartContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
-import { DEMO_MENU_ITEMS } from "@/data/demo";
+import { DEMO_MENU_ITEMS, DEMO_RESTAURANTS } from "@/data/demo";
 import { supabase } from "@/lib/supabase";
-import { MenuItem } from "@/types";
+import { MenuItem, Restaurant } from "@/types";
 
 export default function RestaurantDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addToCart } = useCart();
   const { eshteVizitor } = useVizitori();
   const tema = useTema();
+  const [restoranti, setRestoranti] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,25 +41,30 @@ export default function RestaurantDetail() {
 
       // Vizitori lexon menunë demo; përdoruesi i kyçur lexon Supabase.
       if (eshteVizitor) {
+        setRestoranti(DEMO_RESTAURANTS.find((r) => r.id === id) ?? null);
         setMenuItems(
           DEMO_MENU_ITEMS.filter((item) => item.restaurant_id === id && item.is_available !== false)
         );
         return;
       }
 
-      const { data, error } = await supabase
-        .from("menu_items")
-        .select("*")
-        .eq("restaurant_id", id)
-        .eq("is_available", true)
-        .order("category", { ascending: true });
+      const [{ data: restData }, { data: menuData, error: menuError }] = await Promise.all([
+        supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+        supabase
+          .from("menu_items")
+          .select("*")
+          .eq("restaurant_id", id)
+          .eq("is_available", true)
+          .order("category", { ascending: true }),
+      ]);
 
-      if (error) {
-        setError(error.message);
+      if (menuError) {
+        setError(menuError.message);
         return;
       }
 
-      setMenuItems(data || []);
+      setRestoranti(restData ?? null);
+      setMenuItems(menuData || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -63,6 +80,17 @@ export default function RestaurantDetail() {
       }
     }, [id, eshteVizitor])
   );
+
+  // Artikujt grupohen sipas kategorisë për një menu më të lexueshme.
+  const seksionet = useMemo(() => {
+    const mapa = new Map<string, MenuItem[]>();
+    for (const artikull of menuItems) {
+      const kategoria = artikull.category || "Të tjera";
+      if (!mapa.has(kategoria)) mapa.set(kategoria, []);
+      mapa.get(kategoria)!.push(artikull);
+    }
+    return Array.from(mapa.entries()).map(([title, data]) => ({ title, data }));
+  }, [menuItems]);
 
   if (loading) {
     return (
@@ -92,50 +120,99 @@ export default function RestaurantDetail() {
 
   return (
     <View style={[styles.container, { backgroundColor: tema.sfond }]}>
-      <Text style={[styles.heading, { color: tema.kryesor }]}>Menuja</Text>
+      <Stack.Screen options={{ title: restoranti?.name_sq || restoranti?.name || "Menuja" }} />
 
-      {eshteVizitor && (
-        <View style={[styles.vizitorBanner, { backgroundColor: tema.kryesorSfond, borderColor: tema.kryesor }]}>
-          <Text style={[styles.vizitorBannerText, { color: tema.kryesor }]}>
-            Vizitor · Mund të shtoni në shportë, por për të porositur duhet llogari.
-          </Text>
-        </View>
-      )}
-
-      <FlatList
-        data={menuItems}
+      <SectionList
+        sections={seksionet}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => fetchMenu(true)} colors={[tema.kryesor]} />
         }
-        renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: tema.kart }]}>
-            <View style={styles.cardHeader}>
-              <Text style={[styles.itemName, { color: tema.tekst }]}>{item.name_sq || item.name}</Text>
-              <Text style={[styles.price, { color: tema.kryesor }]}>€{Number(item.price).toFixed(2)}</Text>
+        ListHeaderComponent={
+          <View>
+            <View style={styles.hero}>
+              {restoranti?.image_url ? (
+                <Image source={{ uri: restoranti.image_url }} style={styles.heroImage} resizeMode="cover" />
+              ) : (
+                <View style={styles.heroFallback}>
+                  <Text style={styles.heroFallbackText}>🍽️</Text>
+                </View>
+              )}
+              <LinearGradient
+                colors={["transparent", "rgba(46,16,101,0.85)"]}
+                style={styles.heroOverlay}
+              />
+              <View style={styles.heroTekst}>
+                <Text style={styles.heroTitulli} numberOfLines={2}>
+                  {restoranti?.name_sq || restoranti?.name || "Restoranti"}
+                </Text>
+                <View style={styles.heroMetaRow}>
+                  {restoranti?.rating ? <Text style={styles.heroMeta}>★ {restoranti.rating}</Text> : null}
+                  {restoranti?.delivery_time ? (
+                    <Text style={styles.heroMeta}>🕒 {restoranti.delivery_time}</Text>
+                  ) : null}
+                  {restoranti?.city ? <Text style={styles.heroMeta}>📍 {restoranti.city}</Text> : null}
+                </View>
+                {restoranti?.address ? (
+                  <Text style={styles.heroAdresa} numberOfLines={1}>
+                    {restoranti.address}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-            {(item.description_sq || item.description) && (
-              <Text style={[styles.description, { color: tema.tekstDytësor }]}>
-                {item.description_sq || item.description}
-              </Text>
+
+            {eshteVizitor && (
+              <View style={[styles.vizitorBanner, { backgroundColor: tema.kryesorSfond, borderColor: tema.kryesor }]}>
+                <Text style={[styles.vizitorBannerText, { color: tema.kryesor }]}>
+                  Vizitor · Mund të shtoni në shportë, por për të porositur duhet llogari.
+                </Text>
+              </View>
             )}
-            {item.category && <Text style={styles.category}>{item.category}</Text>}
-            <TouchableOpacity
-              style={[styles.addToCartButton, { backgroundColor: tema.kryesor }]}
-              onPress={() => {
-                addToCart({
-                  menuItemId: item.id,
-                  name: item.name_sq || item.name || "",
-                  price: Number(item.price),
-                  quantity: 1,
-                  restaurantId: id as string,
-                });
-                Alert.alert("Shtuar", "Produkti u shtua në shportë");
-              }}
-            >
-              <Text style={styles.addToCartButtonText}>+ Shto në shportë</Text>
-            </TouchableOpacity>
+          </View>
+        }
+        renderSectionHeader={({ section }) => (
+          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>{section.title}</Text>
+        )}
+        renderItem={({ item }) => (
+          <View style={[styles.itemRow, { backgroundColor: tema.kart }]}>
+            {item.image_url ? (
+              <Image source={{ uri: item.image_url }} style={styles.itemImage} resizeMode="cover" />
+            ) : (
+              <View style={[styles.itemImage, styles.itemImageFallback]}>
+                <Text style={styles.itemImageFallbackText}>🍴</Text>
+              </View>
+            )}
+
+            <View style={styles.itemBody}>
+              <Text style={[styles.itemName, { color: tema.tekst }]} numberOfLines={2}>
+                {item.name_sq || item.name}
+              </Text>
+              {(item.description_sq || item.description) && (
+                <Text style={[styles.description, { color: tema.tekstDytësor }]} numberOfLines={2}>
+                  {item.description_sq || item.description}
+                </Text>
+              )}
+              <View style={styles.itemFooter}>
+                <Text style={[styles.price, { color: tema.kryesor }]}>€{Number(item.price).toFixed(2)}</Text>
+                <TouchableOpacity
+                  style={[styles.addToCartButton, { backgroundColor: tema.kryesor }]}
+                  onPress={() => {
+                    addToCart({
+                      menuItemId: item.id,
+                      name: item.name_sq || item.name || "",
+                      price: Number(item.price),
+                      quantity: 1,
+                      restaurantId: id as string,
+                    });
+                    Alert.alert("Shtuar", "Produkti u shtua në shportë");
+                  }}
+                >
+                  <Text style={styles.addToCartButtonText}>+ Shto</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         )}
       />
@@ -155,19 +232,71 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#F6F4FF",
   },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#7C3AED",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+  listContent: {
+    paddingBottom: 30,
+  },
+  hero: {
+    height: 210,
+    backgroundColor: "#EDE9FE",
+    justifyContent: "flex-end",
+  },
+  heroImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  heroFallback: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroFallbackText: {
+    fontSize: 56,
+  },
+  heroOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  heroTekst: {
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+    gap: 3,
+  },
+  heroTitulli: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#ffffff",
+  },
+  heroMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 2,
+  },
+  heroMeta: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#EDE9FE",
+  },
+  heroAdresa: {
+    fontSize: 12,
+    color: "#DDD6FE",
+    marginTop: 2,
   },
   vizitorBanner: {
     marginHorizontal: 16,
-    marginBottom: 4,
+    marginTop: 14,
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
   },
   vizitorBannerText: {
@@ -175,60 +304,71 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  listContent: {
-    padding: 16,
-    gap: 12,
+  seksioniTitulli: {
+    fontSize: 17,
+    fontWeight: "800",
+    paddingHorizontal: 16,
+    paddingTop: 22,
+    paddingBottom: 8,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+  itemRow: {
+    flexDirection: "row",
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 16,
+    padding: 10,
+    gap: 12,
+    shadowColor: "#2E1065",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 3,
+    shadowRadius: 6,
     elevation: 2,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  itemImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 12,
+    backgroundColor: "#EDE9FE",
+  },
+  itemImageFallback: {
     alignItems: "center",
-    marginBottom: 6,
+    justifyContent: "center",
+  },
+  itemImageFallbackText: {
+    fontSize: 30,
+  },
+  itemBody: {
+    flex: 1,
+    justifyContent: "space-between",
   },
   itemName: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#2E1065",
-    flex: 1,
-    marginRight: 8,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#7C3AED",
+    fontSize: 15,
+    fontWeight: "700",
   },
   description: {
-    fontSize: 14,
-    color: "#6D28D9",
-    marginBottom: 6,
-  },
-  category: {
     fontSize: 12,
-    color: "#8B7AB8",
-    textTransform: "uppercase",
-    marginBottom: 10,
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  itemFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  price: {
+    fontSize: 15,
+    fontWeight: "800",
   },
   addToCartButton: {
-    backgroundColor: "#7C3AED",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignSelf: "flex-start",
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 999,
   },
   addToCartButtonText: {
     color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
   },
   loadingText: {
     marginTop: 10,

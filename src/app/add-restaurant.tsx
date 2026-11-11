@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
+import { useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { supabase } from "@/lib/supabase";
 
 export default function AddRestaurant() {
   const { eshteVizitor, dilSiVizitor } = useVizitori();
+  const { qyteti } = useLokacioni();
   const tema = useTema();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -28,6 +30,7 @@ export default function AddRestaurant() {
           name_sq: name.trim(),
           category: category.trim() || null,
           address: address.trim() || null,
+          city: qyteti,
           delivery_time: deliveryTime.trim() || null,
           is_active: true,
           rating: 0,
@@ -98,6 +101,20 @@ export default function AddRestaurant() {
           placeholderTextColor={tema.tekstDytësor}
         />
 
+        <Text style={[styles.label, { color: tema.tekst }]}>Qyteti</Text>
+        <View
+          style={[
+            styles.input,
+            styles.qytetiFusha,
+            { borderColor: tema.kufi, backgroundColor: tema.kryesorSfond },
+          ]}
+        >
+          <Text style={[styles.qytetiTeksti, { color: tema.tekst }]}>📍 {qyteti}</Text>
+        </View>
+        <Text style={[styles.ndihme, { color: tema.tekstDytësor }]}>
+          Qyteti merret nga zgjedhja në krye të aplikacionit.
+        </Text>
+
         <Text style={[styles.label, { color: tema.tekst }]}>Koha e dorëzimit</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
@@ -155,6 +172,17 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: "#2E1065",
+  },
+  qytetiFusha: {
+    justifyContent: "center",
+  },
+  qytetiTeksti: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  ndihme: {
+    fontSize: 12,
+    marginTop: -10,
   },
   button: {
     backgroundColor: "#7C3AED",
