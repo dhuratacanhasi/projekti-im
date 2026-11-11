@@ -40,6 +40,7 @@ function Harta() {
         headerStyle: { backgroundColor: tema.kryesor },
         headerTintColor: tema.butonTekst,
         headerTitleStyle: { fontWeight: "700" },
+        headerShadowVisible: false,
         contentStyle: { backgroundColor: tema.sfond },
       }}
     >

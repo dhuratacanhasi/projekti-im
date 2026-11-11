@@ -122,14 +122,14 @@ export default function AddRestaurant() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F6F4FF",
     padding: 20,
     paddingTop: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#FF6B35",
+    color: "#7C3AED",
     marginBottom: 24,
     textAlign: "center",
   },
@@ -144,20 +144,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#2E1065",
     marginBottom: -8,
   },
   input: {
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#DDD6FE",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: "#333",
+    color: "#2E1065",
   },
   button: {
-    backgroundColor: "#FF6B35",
+    backgroundColor: "#7C3AED",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",

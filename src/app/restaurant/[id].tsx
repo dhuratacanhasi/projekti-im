@@ -146,19 +146,19 @@ export default function RestaurantDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F6F4FF",
   },
   centerContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F6F4FF",
   },
   heading: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#FF6B35",
+    color: "#7C3AED",
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
@@ -198,28 +198,28 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#333",
+    color: "#2E1065",
     flex: 1,
     marginRight: 8,
   },
   price: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#FF6B35",
+    color: "#7C3AED",
   },
   description: {
     fontSize: 14,
-    color: "#666",
+    color: "#6D28D9",
     marginBottom: 6,
   },
   category: {
     fontSize: 12,
-    color: "#999",
+    color: "#8B7AB8",
     textTransform: "uppercase",
     marginBottom: 10,
   },
   addToCartButton: {
-    backgroundColor: "#FF6B35",
+    backgroundColor: "#7C3AED",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#666",
+    color: "#6D28D9",
   },
   errorTitle: {
     fontSize: 20,
@@ -243,11 +243,11 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: "#666",
+    color: "#6D28D9",
     textAlign: "center",
   },
   emptyText: {
     fontSize: 16,
-    color: "#666",
+    color: "#6D28D9",
   },
 });

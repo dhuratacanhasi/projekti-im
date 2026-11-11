@@ -1,7 +1,5 @@
-import { useVizitori } from "@/context/VizitoriContext";
-
-// Ngjyrat e aplikacionit: portokalli për përdoruesin e kyçur,
-// purple për vizitorin (që të dallohet qartë që s'ka llogari).
+// Ngjyrat e aplikacionit: një paletë e vetme vjollcë për të gjithë.
+// Vizitori e përdor të njëjtën paletë, vetëm banneri tregon statusin.
 export type Tema = {
   kryesor: string;
   kryesorSfond: string;
@@ -13,29 +11,17 @@ export type Tema = {
   butonTekst: string;
 };
 
-const portokalli: Tema = {
-  kryesor: "#FF6B35",
-  kryesorSfond: "#fff3ec",
-  sfond: "#f9f9f9",
-  kart: "#ffffff",
-  tekst: "#333333",
-  tekstDytësor: "#666666",
-  kufi: "#dddddd",
-  butonTekst: "#ffffff",
-};
-
-const purple: Tema = {
+const vjollce: Tema = {
   kryesor: "#7C3AED",
-  kryesorSfond: "#ede9fe",
-  sfond: "#f5f3ff",
-  kart: "#ffffff",
-  tekst: "#2e1065",
-  tekstDytësor: "#6d28d9",
-  kufi: "#ddd6fe",
-  butonTekst: "#ffffff",
+  kryesorSfond: "#EDE9FE",
+  sfond: "#F6F4FF",
+  kart: "#FFFFFF",
+  tekst: "#2E1065",
+  tekstDytësor: "#6D28D9",
+  kufi: "#DDD6FE",
+  butonTekst: "#FFFFFF",
 };
 
 export function useTema(): Tema {
-  const { eshteVizitor } = useVizitori();
-  return eshteVizitor ? purple : portokalli;
+  return vjollce;
 }

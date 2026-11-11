@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Link, router, useFocusEffect } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCart } from "@/context/CartContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
@@ -100,24 +101,29 @@ export default function Home() {
 
   return (
     <View style={[styles.container, { backgroundColor: tema.sfond }]}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={[styles.heading, { color: tema.kryesor }]}>UniBite</Text>
-          <Text style={[styles.subtitle, { color: tema.tekstDytësor }]}>
-            {eshteVizitor ? "Po shfletoni si vizitor" : "Restorantet në Mitrovicë"}
-          </Text>
-        </View>
+      <LinearGradient
+        colors={["#7C3AED", "#5B21B6"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <Text style={styles.pershendetje}>Përshëndetje 👋</Text>
+        <Text style={styles.heading}>Çka po hajmë sot?</Text>
+        <Text style={styles.subtitle}>
+          {eshteVizitor ? "Po shfletoni si vizitor" : "Restorantet në Mitrovicë"}
+        </Text>
+
         <View style={styles.headerButtons}>
           <Link href="/cart" asChild>
-            <TouchableOpacity style={StyleSheet.flatten([styles.cartButton, { borderColor: tema.kryesor }])}>
-              <Text style={[styles.cartButtonText, { color: tema.kryesor }]}>🛒 {itemCount}</Text>
+            <TouchableOpacity style={styles.cartButton}>
+              <Text style={styles.cartButtonText}>🛒 Shporta · {itemCount}</Text>
             </TouchableOpacity>
           </Link>
-          <TouchableOpacity style={[styles.addButton, { backgroundColor: tema.kryesor }]} onPress={shtoRestorant}>
+          <TouchableOpacity style={styles.addButton} onPress={shtoRestorant}>
             <Text style={styles.addButtonText}>+ Shto</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
 
       {eshteVizitor && (
         <TouchableOpacity
@@ -166,62 +172,74 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
-    paddingTop: 16,
+    backgroundColor: "#F6F4FF",
   },
   centerContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F6F4FF",
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 16,
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
+  },
+  pershendetje: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#DDD6FE",
+    letterSpacing: 0.4,
   },
   headerButtons: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
+    marginTop: 16,
   },
   heading: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FF6B35",
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#ffffff",
+    marginTop: 2,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 15,
+    color: "#EDE9FE",
+    marginTop: 2,
   },
   cartButton: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#FF6B35",
+    flex: 1,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    alignItems: "center",
   },
   cartButtonText: {
-    color: "#FF6B35",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#5B21B6",
+    fontSize: 15,
+    fontWeight: "700",
   },
   addButton: {
-    backgroundColor: "#FF6B35",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.55)",
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 12,
+    alignItems: "center",
   },
   addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
   },
   vizitorBanner: {
     marginHorizontal: 16,
+    marginTop: 12,
     marginBottom: 12,
     padding: 10,
     borderRadius: 8,
@@ -255,17 +273,17 @@ const styles = StyleSheet.create({
   restaurantName: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+    color: "#2E1065",
     flex: 1,
   },
   rating: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFB800",
+    color: "#F59E0B",
   },
   category: {
     fontSize: 14,
-    color: "#666",
+    color: "#6D28D9",
     marginBottom: 10,
   },
   cardFooter: {
@@ -275,12 +293,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: "#666",
+    color: "#6D28D9",
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#666",
+    color: "#6D28D9",
   },
   errorTitle: {
     fontSize: 20,
@@ -290,12 +308,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: "#666",
+    color: "#6D28D9",
     textAlign: "center",
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: "#FF6B35",
+    backgroundColor: "#7C3AED",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -307,6 +325,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#666",
+    color: "#6D28D9",
   },
 });

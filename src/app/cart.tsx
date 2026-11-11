@@ -99,22 +99,22 @@ export default function Cart() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F6F4FF",
   },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F6F4FF",
     padding: 20,
   },
   emptyText: {
     fontSize: 18,
-    color: "#666",
+    color: "#6D28D9",
     marginBottom: 20,
   },
   shopButton: {
-    backgroundColor: "#FF6B35",
+    backgroundColor: "#7C3AED",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#333",
+    color: "#2E1065",
     flex: 1,
   },
   removeText: {
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 15,
-    color: "#666",
+    color: "#6D28D9",
     marginBottom: 12,
   },
   quantityRow: {
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   quantityButton: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#EDE9FE",
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   quantityButtonText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+    color: "#2E1065",
   },
   quantityText: {
     fontSize: 16,
@@ -188,13 +188,13 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     fontSize: 16,
     fontWeight: "bold",
-    color: "#FF6B35",
+    color: "#7C3AED",
   },
   footer: {
     backgroundColor: "#fff",
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: "#DDD6FE",
   },
   vizitorNote: {
     fontSize: 13,
@@ -209,15 +209,15 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
+    color: "#2E1065",
   },
   totalAmount: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#FF6B35",
+    color: "#7C3AED",
   },
   orderButton: {
-    backgroundColor: "#FF6B35",
+    backgroundColor: "#7C3AED",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
