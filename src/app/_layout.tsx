@@ -1,7 +1,10 @@
 import { SplashScreen, Stack } from "expo-router";
 
 import { ButoniDil } from "@/components/ButoniDil";
+import { ButoniHyr } from "@/components/ButoniHyr";
 import { CartProvider } from "@/context/CartContext";
+import { useTema } from "@/context/TemaContext";
+import { VizitoriProvider, useVizitori } from "@/context/VizitoriContext";
 import { SesioniProvider, useSesioni } from "@/lib/sesioni";
 
 SplashScreen.preventAutoHideAsync();
@@ -9,33 +12,51 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   return (
     <SesioniProvider>
-      <CartProvider>
-        <Harta />
-      </CartProvider>
+      <VizitoriProvider>
+        <CartProvider>
+          <Harta />
+        </CartProvider>
+      </VizitoriProvider>
     </SesioniProvider>
   );
 }
 
-const lista = { title: "UniBite", headerRight: () => <ButoniDil /> };
-
 // #region harta
-// Pa hyrë: vetëm “hyrja”. I hyrë: ekranet e UniBite. Kur sesioni ndryshon,
-// ekrani ndryshon vetë. Roja është vetëm për përdoruesin: të dhënat
-// i mbron RLS-i në server.
+// Pa llogari: hyrja ose vizitori. Vizitori shfleton me të dhëna demo,
+// por porosia dhe shtimi i restorantit kërkojnë llogari.
+// Të dhënat e vërteta i mbron RLS-i në server.
 function Harta() {
   const { perdoruesi, dukeLexuar } = useSesioni();
+  const { eshteVizitor } = useVizitori();
+  const tema = useTema();
   if (!dukeLexuar) SplashScreen.hide();
+
+  const iLejuar = perdoruesi !== null || eshteVizitor;
 
   return (
     // #region roja
-    <Stack>
-      <Stack.Protected guard={perdoruesi !== null}>
-        <Stack.Screen name="index" options={lista} />
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: tema.kryesor },
+        headerTintColor: tema.butonTekst,
+        headerTitleStyle: { fontWeight: "700" },
+        contentStyle: { backgroundColor: tema.sfond },
+      }}
+    >
+      <Stack.Protected guard={iLejuar}>
+        <Stack.Screen
+          name="index"
+          options={{
+            title: eshteVizitor ? "UniBite · Vizitor" : "UniBite",
+            headerRight: () => (perdoruesi ? <ButoniDil /> : <ButoniHyr />),
+          }}
+        />
         <Stack.Screen name="add-restaurant" options={{ title: "Shto Restorant", presentation: "modal" }} />
         <Stack.Screen name="restaurant/[id]" options={{ title: "Menuja" }} />
         <Stack.Screen name="cart" options={{ title: "Shporta" }} />
+        <Stack.Screen name="checkout" options={{ title: "Porosia" }} />
       </Stack.Protected>
-      <Stack.Protected guard={perdoruesi === null}>
+      <Stack.Protected guard={!iLejuar}>
         <Stack.Screen name="hyrja" options={{ title: "Hyrja", headerShown: false }} />
       </Stack.Protected>
     </Stack>

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { useVizitori } from "@/context/VizitoriContext";
 import { hyr, krijoLlogari } from "@/lib/sesioni";
 
 // Ekrani i hyrjes. Pas hyrjes nuk ka router.push: roja në _layout.tsx e çon vetë te lista.
 export default function Hyrja() {
+  const { hyjSiVizitor } = useVizitori();
   const [email, setEmail] = useState("");
   const [fjalekalimi, setFjalekalimi] = useState("");
   const [mesazhi, setMesazhi] = useState<{ tekst: string; gabim: boolean } | null>(null);
@@ -57,6 +59,19 @@ export default function Hyrja() {
       <Pressable style={[styles.dytesor, duke && styles.duke]} onPress={() => vepro("krijo")} disabled={duke} accessibilityRole="button">
         <Text style={styles.dytesorTekst}>Krijo llogari</Text>
       </Pressable>
+
+      <View style={styles.ndaresi}>
+        <View style={styles.vija} />
+        <Text style={styles.ose}>ose</Text>
+        <View style={styles.vija} />
+      </View>
+
+      <Pressable style={[styles.vizitor, duke && styles.duke]} onPress={hyjSiVizitor} disabled={duke} accessibilityRole="button">
+        <Text style={styles.vizitorTekst}>Vazhdo si vizitor</Text>
+      </Pressable>
+      <Text style={styles.vizitorShpjegim}>
+        Shfletoni restorantet pa llogari. Për të porositur, do t'ju kërkohet të hyni.
+      </Text>
     </View>
   );
 }
@@ -72,5 +87,11 @@ const styles = StyleSheet.create({
   butoniTekst: { color: "#ffffff", fontWeight: "700", fontSize: 16 },
   dytesor: { padding: 14, borderRadius: 12, borderWidth: 2, borderColor: "#FF6B35", alignItems: "center" },
   dytesorTekst: { color: "#FF6B35", fontWeight: "700", fontSize: 16 },
+  ndaresi: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 4 },
+  vija: { flex: 1, height: 1, backgroundColor: "#ddd" },
+  ose: { color: "#999", fontSize: 13 },
+  vizitor: { padding: 14, borderRadius: 12, backgroundColor: "#ede9fe", alignItems: "center" },
+  vizitorTekst: { color: "#7C3AED", fontWeight: "700", fontSize: 16 },
+  vizitorShpjegim: { color: "#6d28d9", fontSize: 12, textAlign: "center" },
   duke: { opacity: 0.6 },
 });

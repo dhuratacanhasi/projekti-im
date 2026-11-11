@@ -1,35 +1,41 @@
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { useCart } from "@/context/CartContext";
+import { useTema } from "@/context/TemaContext";
+import { useVizitori } from "@/context/VizitoriContext";
 
 export default function Cart() {
-  const { items, removeFromCart, updateQuantity, clearCart, total } = useCart();
+  const { items, removeFromCart, updateQuantity, total } = useCart();
+  const { eshteVizitor, dilSiVizitor } = useVizitori();
+  const tema = useTema();
 
   function handleOrder() {
     if (items.length === 0) {
       Alert.alert("Gabim", "Shporta është bosh");
       return;
     }
-    Alert.alert(
-      "Porosia u dërgua",
-      "Porosia juaj u pranua me sukses! Do të kontaktuemi së shpejti.",
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            clearCart();
-            router.push("/");
-          },
-        },
-      ]
-    );
+
+    // Porosia kërkon llogari; shporta ruhet dhe vazhdon pas hyrjes.
+    if (eshteVizitor) {
+      Alert.alert(
+        "Kërkohet llogari",
+        "Për të porositur duhet të hyni ose të krijoni llogari. Shporta juaj do të ruhet.",
+        [
+          { text: "Anulo", style: "cancel" },
+          { text: "Hyr", onPress: dilSiVizitor },
+        ]
+      );
+      return;
+    }
+
+    router.push("/checkout");
   }
 
   if (items.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Shporta është bosh</Text>
-        <TouchableOpacity style={styles.shopButton} onPress={() => router.push("/")}>
+      <View style={[styles.emptyContainer, { backgroundColor: tema.sfond }]}>
+        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>Shporta është bosh</Text>
+        <TouchableOpacity style={[styles.shopButton, { backgroundColor: tema.kryesor }]} onPress={() => router.push("/")}>
           <Text style={styles.shopButtonText}>Kthehu te restorantet</Text>
         </TouchableOpacity>
       </View>
@@ -37,47 +43,52 @@ export default function Cart() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: tema.sfond }]}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: tema.kart }]}>
             <View style={styles.cardHeader}>
-              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={[styles.itemName, { color: tema.tekst }]}>{item.name}</Text>
               <TouchableOpacity onPress={() => removeFromCart(item.id)}>
                 <Text style={styles.removeText}>Fshi</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.price}>€{item.price.toFixed(2)}</Text>
+            <Text style={[styles.price, { color: tema.tekstDytësor }]}>€{item.price.toFixed(2)}</Text>
             <View style={styles.quantityRow}>
               <TouchableOpacity
-                style={styles.quantityButton}
+                style={[styles.quantityButton, { backgroundColor: tema.kryesorSfond }]}
                 onPress={() => updateQuantity(item.id, item.quantity - 1)}
               >
-                <Text style={styles.quantityButtonText}>-</Text>
+                <Text style={[styles.quantityButtonText, { color: tema.tekst }]}>-</Text>
               </TouchableOpacity>
-              <Text style={styles.quantityText}>{item.quantity}</Text>
+              <Text style={[styles.quantityText, { color: tema.tekst }]}>{item.quantity}</Text>
               <TouchableOpacity
-                style={styles.quantityButton}
+                style={[styles.quantityButton, { backgroundColor: tema.kryesorSfond }]}
                 onPress={() => updateQuantity(item.id, item.quantity + 1)}
               >
-                <Text style={styles.quantityButtonText}>+</Text>
+                <Text style={[styles.quantityButtonText, { color: tema.tekst }]}>+</Text>
               </TouchableOpacity>
-              <Text style={styles.itemTotal}>
+              <Text style={[styles.itemTotal, { color: tema.kryesor }]}>
                 €{(item.price * item.quantity).toFixed(2)}
               </Text>
             </View>
           </View>
         )}
       />
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: tema.kart, borderTopColor: tema.kufi }]}>
+        {eshteVizitor && (
+          <Text style={[styles.vizitorNote, { color: tema.tekstDytësor }]}>
+            Po shfletoni si vizitor. Për të porositur, hyni ose krijoni llogari.
+          </Text>
+        )}
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Totali:</Text>
-          <Text style={styles.totalAmount}>€{total.toFixed(2)}</Text>
+          <Text style={[styles.totalLabel, { color: tema.tekst }]}>Totali:</Text>
+          <Text style={[styles.totalAmount, { color: tema.kryesor }]}>€{total.toFixed(2)}</Text>
         </View>
-        <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
+        <TouchableOpacity style={[styles.orderButton, { backgroundColor: tema.kryesor }]} onPress={handleOrder}>
           <Text style={styles.orderButtonText}>Porosit tani</Text>
         </TouchableOpacity>
       </View>
@@ -184,6 +195,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#eee",
+  },
+  vizitorNote: {
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: 10,
   },
   totalRow: {
     flexDirection: "row",

@@ -1,12 +1,17 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Link, router, useFocusEffect } from "expo-router";
+import { useCart } from "@/context/CartContext";
+import { useTema } from "@/context/TemaContext";
+import { useVizitori } from "@/context/VizitoriContext";
+import { DEMO_RESTAURANTS } from "@/data/demo";
 import { supabase } from "@/lib/supabase";
 import { Restaurant } from "@/types";
-import { useCart } from "@/context/CartContext";
 
 export default function Home() {
   const { itemCount } = useCart();
+  const { eshteVizitor, dilSiVizitor } = useVizitori();
+  const tema = useTema();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -20,6 +25,13 @@ export default function Home() {
         setLoading(true);
       }
       setError(null);
+
+      // Vizitori shfleton demo-n lokale; Supabase kërkon llogari (RLS).
+      if (eshteVizitor) {
+        setRestaurants(DEMO_RESTAURANTS);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("restaurants")
         .select("*")
@@ -43,24 +55,35 @@ export default function Home() {
   useFocusEffect(
     useCallback(() => {
       fetchRestaurants();
-    }, [])
+    }, [eshteVizitor])
   );
+
+  function shtoRestorant() {
+    if (eshteVizitor) {
+      Alert.alert("Kërkohet llogari", "Për të shtuar restorant duhet të hyni ose të krijoni llogari.", [
+        { text: "Anulo", style: "cancel" },
+        { text: "Hyr", onPress: dilSiVizitor },
+      ]);
+      return;
+    }
+    router.push("/add-restaurant");
+  }
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#FF6B35" />
-        <Text style={styles.loadingText}>Po ngarkohen restorantet...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
+        <ActivityIndicator size="large" color={tema.kryesor} />
+        <Text style={[styles.loadingText, { color: tema.tekstDytësor }]}>Po ngarkohen restorantet...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
         <Text style={styles.errorTitle}>Gabim</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => fetchRestaurants()}>
+        <Text style={[styles.errorText, { color: tema.tekstDytësor }]}>{error}</Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: tema.kryesor }]} onPress={() => fetchRestaurants()}>
           <Text style={styles.retryButtonText}>Provo përsëri</Text>
         </TouchableOpacity>
       </View>
@@ -69,56 +92,67 @@ export default function Home() {
 
   if (restaurants.length === 0) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.emptyText}>Nuk ka restorante të disponueshëm</Text>
+      <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
+        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>Nuk ka restorante të disponueshëm</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: tema.sfond }]}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.heading}>UniBite</Text>
-          <Text style={styles.subtitle}>Restorantet në Mitrovicë</Text>
+          <Text style={[styles.heading, { color: tema.kryesor }]}>UniBite</Text>
+          <Text style={[styles.subtitle, { color: tema.tekstDytësor }]}>
+            {eshteVizitor ? "Po shfletoni si vizitor" : "Restorantet në Mitrovicë"}
+          </Text>
         </View>
         <View style={styles.headerButtons}>
           <Link href="/cart" asChild>
-            <TouchableOpacity style={styles.cartButton}>
-              <Text style={styles.cartButtonText}>🛒 {itemCount}</Text>
+            <TouchableOpacity style={[styles.cartButton, { borderColor: tema.kryesor }]}>
+              <Text style={[styles.cartButtonText, { color: tema.kryesor }]}>🛒 {itemCount}</Text>
             </TouchableOpacity>
           </Link>
-          <Link href="/add-restaurant" asChild>
-            <TouchableOpacity style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ Shto</Text>
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: tema.kryesor }]} onPress={shtoRestorant}>
+            <Text style={styles.addButtonText}>+ Shto</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      {eshteVizitor && (
+        <TouchableOpacity
+          style={[styles.vizitorBanner, { backgroundColor: tema.kryesorSfond, borderColor: tema.kryesor }]}
+          onPress={dilSiVizitor}
+        >
+          <Text style={[styles.vizitorBannerText, { color: tema.kryesor }]}>
+            Vizitor · Hyni për të porositur ose për të shtuar restorant
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <FlatList
         data={restaurants}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => fetchRestaurants(true)} colors={["#FF6B35"]} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => fetchRestaurants(true)} colors={[tema.kryesor]} />
         }
         renderItem={({ item }) => (
           <Link href={`/restaurant/${item.id}`} asChild>
-            <TouchableOpacity style={styles.card}>
+            <TouchableOpacity style={[styles.card, { backgroundColor: tema.kart }]}>
               <View style={styles.cardHeader}>
-                <Text style={styles.restaurantName}>{item.name_sq || item.name}</Text>
+                <Text style={[styles.restaurantName, { color: tema.tekst }]}>{item.name_sq || item.name}</Text>
                 {item.rating && <Text style={styles.rating}>★ {item.rating}</Text>}
               </View>
               {item.category && (
-                <Text style={styles.category}>{item.category}</Text>
+                <Text style={[styles.category, { color: tema.tekstDytësor }]}>{item.category}</Text>
               )}
               <View style={styles.cardFooter}>
                 {item.delivery_time && (
-                  <Text style={styles.infoText}>🕒 {item.delivery_time}</Text>
+                  <Text style={[styles.infoText, { color: tema.tekstDytësor }]}>🕒 {item.delivery_time}</Text>
                 )}
                 {item.address && (
-                  <Text style={styles.infoText}>📍 {item.address}</Text>
+                  <Text style={[styles.infoText, { color: tema.tekstDytësor }]}>📍 {item.address}</Text>
                 )}
               </View>
             </TouchableOpacity>
@@ -133,7 +167,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
-    paddingTop: 60,
+    paddingTop: 16,
   },
   centerContainer: {
     flex: 1,
@@ -185,6 +219,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  vizitorBanner: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  vizitorBannerText: {
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
   },
   listContent: {
     padding: 16,

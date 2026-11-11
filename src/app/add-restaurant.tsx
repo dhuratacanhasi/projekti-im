@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
+import { useTema } from "@/context/TemaContext";
+import { useVizitori } from "@/context/VizitoriContext";
 import { supabase } from "@/lib/supabase";
 
 export default function AddRestaurant() {
+  const { eshteVizitor, dilSiVizitor } = useVizitori();
+  const tema = useTema();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [address, setAddress] = useState("");
@@ -48,55 +52,67 @@ export default function AddRestaurant() {
     }
   }
 
+  if (eshteVizitor) {
+    return (
+      <View style={[styles.container, { backgroundColor: tema.sfond }]}>
+        <Text style={[styles.title, { color: tema.kryesor }]}>Kërkohet llogari</Text>
+        <Text style={[styles.guardText, { color: tema.tekstDytësor }]}>
+          Për të shtuar restorant duhet të hyni ose të krijoni llogari.
+        </Text>
+        <TouchableOpacity style={[styles.button, { backgroundColor: tema.kryesor }]} onPress={dilSiVizitor}>
+          <Text style={styles.buttonText}>Hyr / Krijo llogari</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Shto Restorant</Text>
+    <View style={[styles.container, { backgroundColor: tema.sfond }]}>
+      <Text style={[styles.title, { color: tema.kryesor }]}>Shto Restorant</Text>
 
       <View style={styles.form}>
-        <Text style={styles.label}>Emri i restorantit *</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>Emri i restorantit *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={name}
           onChangeText={setName}
           placeholder="p.sh. Pizza House"
-          placeholderTextColor="#999"
+          placeholderTextColor={tema.tekstDytësor}
         />
 
-        <Text style={styles.label}>Kategoria</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>Kategoria</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={category}
           onChangeText={setCategory}
           placeholder="p.sh. Pizza, Fast Food"
-          placeholderTextColor="#999"
+          placeholderTextColor={tema.tekstDytësor}
         />
 
-        <Text style={styles.label}>Adresa</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>Adresa</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={address}
           onChangeText={setAddress}
           placeholder="p.sh. Rruga Adem Jashari"
-          placeholderTextColor="#999"
+          placeholderTextColor={tema.tekstDytësor}
         />
 
-        <Text style={styles.label}>Koha e dorëzimit</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>Koha e dorëzimit</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={deliveryTime}
           onChangeText={setDeliveryTime}
           placeholder="p.sh. 20-30 min"
-          placeholderTextColor="#999"
+          placeholderTextColor={tema.tekstDytësor}
         />
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: tema.kryesor }, loading && styles.buttonDisabled]}
           onPress={handleSubmit}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? "Po ruhet..." : "Ruaj"}
-          </Text>
+          <Text style={styles.buttonText}>{loading ? "Po ruhet..." : "Ruaj"}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -108,7 +124,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9f9f9",
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 20,
   },
   title: {
     fontSize: 28,
@@ -116,6 +132,11 @@ const styles = StyleSheet.create({
     color: "#FF6B35",
     marginBottom: 24,
     textAlign: "center",
+  },
+  guardText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
   },
   form: {
     gap: 16,

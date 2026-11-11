@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text } from "react-native";
 
+import { useVizitori } from "@/context/VizitoriContext";
 import { dil } from "@/lib/sesioni";
 
 // Butoni “Dil” në krye të listës. Pas daljes roja në _layout.tsx e kthen aplikacionin te hyrja.
 export function ButoniDil() {
   const [duke, setDuke] = useState(false);
+  const { dilSiVizitor } = useVizitori();
 
   async function dalja() {
     setDuke(true);
     try {
       await dil();
+      dilSiVizitor();
     } catch (e) {
       setDuke(false);
       Alert.alert("Dalja nuk u krye", (e as Error).message);
@@ -25,5 +28,5 @@ export function ButoniDil() {
 }
 
 const styles = StyleSheet.create({
-  teksti: { color: "#FF6B35", fontWeight: "700", fontSize: 16, paddingHorizontal: 8 },
+  teksti: { color: "#ffffff", fontWeight: "700", fontSize: 16, paddingHorizontal: 8 },
 });
