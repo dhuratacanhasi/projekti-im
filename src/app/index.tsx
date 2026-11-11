@@ -60,7 +60,7 @@ export default function Home() {
       <View style={styles.centerContainer}>
         <Text style={styles.errorTitle}>Gabim</Text>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchRestaurants}>
+        <TouchableOpacity style={styles.retryButton} onPress={() => fetchRestaurants()}>
           <Text style={styles.retryButtonText}>Provo përsëri</Text>
         </TouchableOpacity>
       </View>

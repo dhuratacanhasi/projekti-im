@@ -16,7 +16,7 @@ Studentët që duan të porosisin ushqim shpejt pa pasur nevojë të dalin ose t
 - Loyalty / Coupons (kuponë për zbritje sipas blerjeve)
 
 ## Stack
-- Expo SDK 57, TypeScript, React Native 19
+- Expo SDK 58, TypeScript, React Native 19
 - Expo Router (file-based routing në src/app/)
 - Supabase (supabase-js) – Auth, Database, RLS
 - .env.local: EXPO_PUBLIC_SUPABASE_URL dhe EXPO_PUBLIC_SUPABASE_ANON_KEY
@@ -31,7 +31,7 @@ Studentët që duan të porosisin ushqim shpejt pa pasur nevojë të dalin ose t
 - Commit pas çdo hapi që punon
 - Teksti i UI-së në shqip
 - Përdor anglisht për emra tabelash, kolonash, funksionesh në kod
-- Ndjek Expo SDK 57 docs (jo memorie)
+- Ndjek Expo SDK 58 docs (jo memorie)
 - Përdor `npx expo install` për paketa
 
 ## Statusi
