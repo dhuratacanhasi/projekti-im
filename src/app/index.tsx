@@ -109,7 +109,7 @@ export default function Home() {
         </View>
         <View style={styles.headerButtons}>
           <Link href="/cart" asChild>
-            <TouchableOpacity style={[styles.cartButton, { borderColor: tema.kryesor }]}>
+            <TouchableOpacity style={StyleSheet.flatten([styles.cartButton, { borderColor: tema.kryesor }])}>
               <Text style={[styles.cartButtonText, { color: tema.kryesor }]}>🛒 {itemCount}</Text>
             </TouchableOpacity>
           </Link>
@@ -139,7 +139,7 @@ export default function Home() {
         }
         renderItem={({ item }) => (
           <Link href={`/restaurant/${item.id}`} asChild>
-            <TouchableOpacity style={[styles.card, { backgroundColor: tema.kart }]}>
+            <TouchableOpacity style={StyleSheet.flatten([styles.card, { backgroundColor: tema.kart }])}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.restaurantName, { color: tema.tekst }]}>{item.name_sq || item.name}</Text>
                 {item.rating && <Text style={styles.rating}>★ {item.rating}</Text>}
