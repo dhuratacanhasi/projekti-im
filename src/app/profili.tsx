@@ -11,10 +11,12 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
+import { PRAGU_KUPONIT, useBesnikeria } from "@/context/BesnikeriaContext";
 import { useCart } from "@/context/CartContext";
 import { useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
+import { plotesoRestorantin } from "@/lib/katalogu";
 import { dil, useSesioni } from "@/lib/sesioni";
 import { supabase } from "@/lib/supabase";
 import { Restaurant } from "@/types";
@@ -23,11 +25,13 @@ export default function Profili() {
   const { perdoruesi } = useSesioni();
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { itemCount } = useCart();
+  const { porosite, progresi, kuponat } = useBesnikeria();
   const { qyteti } = useLokacioni();
   const tema = useTema();
   const [restorantet, setRestorantet] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [dukeDale, setDukeDale] = useState(false);
+  const [dukeFshire, setDukeFshire] = useState<string | null>(null);
 
   const iniciali = (perdoruesi?.email ?? "?").charAt(0).toUpperCase();
 
@@ -50,7 +54,7 @@ export default function Profili() {
           .order("created_at", { ascending: false });
 
         if (aktiv) {
-          setRestorantet(data || []);
+          setRestorantet((data || []).map(plotesoRestorantin));
           setLoading(false);
         }
       }
@@ -80,6 +84,49 @@ export default function Profili() {
         },
       },
     ]);
+  }
+
+  function fshiRestorantin(r: Restaurant) {
+    if (!perdoruesi) return;
+    const emri = r.name_sq || r.name;
+
+    Alert.alert(
+      "Fshi restorantin",
+      `A jeni i sigurt që dëshironi të fshini "${emri}"? Ky veprim nuk kthehet.`,
+      [
+        { text: "Anulo", style: "cancel" },
+        {
+          text: "Fshi",
+          style: "destructive",
+          onPress: async () => {
+            setDukeFshire(r.id);
+            try {
+              // Fshijmë më parë artikujt e menusë, pastaj restorantin.
+              await supabase.from("menu_items").delete().eq("restaurant_id", r.id);
+              const { error } = await supabase
+                .from("restaurants")
+                .delete()
+                .eq("id", r.id)
+                .eq("pronari_id", perdoruesi.id);
+
+              if (error) {
+                Alert.alert(
+                  "Nuk u fshi",
+                  `${error.message}\n\nPër të lejuar fshirjen, ekzekuto skedarin supabase/j6-fshirja.sql në Supabase → SQL Editor.`
+                );
+                return;
+              }
+
+              setRestorantet((lista) => lista.filter((x) => x.id !== r.id));
+            } catch (e) {
+              Alert.alert("Gabim", (e as Error).message);
+            } finally {
+              setDukeFshire(null);
+            }
+          },
+        },
+      ]
+    );
   }
 
   // Vizitori nuk ka llogari: i ofrojmë hyrjen.
@@ -140,6 +187,54 @@ export default function Profili() {
 
       <View style={styles.seksioni}>
         <View style={styles.seksioniKoka}>
+          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>Besnikëria UniBite</Text>
+          <Text style={[styles.shtoLink, { color: tema.kryesor }]}>🎟️</Text>
+        </View>
+
+        <View style={[styles.besnikKarta, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
+          <View style={styles.besnikRresht}>
+            <Text style={[styles.besnikNumri, { color: tema.kryesor }]}>{porosite}</Text>
+            <Text style={[styles.besnikTeksti, { color: tema.tekstDytësor }]}>porosi të përfunduara</Text>
+          </View>
+
+          {kuponat.filter((k) => !k.perdorur).length > 0 ? (
+            <View style={styles.kuponRresht}>
+              <Text style={styles.kuponIkona}>🎟️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>
+                  {kuponat.filter((k) => !k.perdorur).length} kuponë aktivë −10%
+                </Text>
+                <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
+                  {kuponat
+                    .filter((k) => !k.perdorur)
+                    .map((k) => k.kodi)
+                    .join(" · ")}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <>
+              <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
+                {progresi}/{PRAGU_KUPONIT} porosi drejt kuponit të radhës −10%
+              </Text>
+              <View style={[styles.progresShirit, { backgroundColor: tema.kryesorSfond }]}>
+                <View
+                  style={[
+                    styles.progresMbushe,
+                    {
+                      width: `${(progresi / PRAGU_KUPONIT) * 100}%`,
+                      backgroundColor: tema.kryesor,
+                    },
+                  ]}
+                />
+              </View>
+            </>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.seksioni}>
+        <View style={styles.seksioniKoka}>
           <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>Restorantet e mia</Text>
           <TouchableOpacity onPress={() => router.push("/add-restaurant")}>
             <Text style={[styles.shtoLink, { color: tema.kryesor }]}>+ Shto</Text>
@@ -164,29 +259,39 @@ export default function Profili() {
           </View>
         ) : (
           restorantet.map((r) => (
-            <TouchableOpacity
-              key={r.id}
-              style={[styles.restorantiRresht, { backgroundColor: tema.kart }]}
-              onPress={() => router.push(`/restaurant/${r.id}`)}
-              activeOpacity={0.85}
-            >
-              {r.image_url ? (
-                <Image source={{ uri: r.image_url }} style={styles.restorantiFoto} resizeMode="cover" />
-              ) : (
-                <View style={[styles.restorantiFoto, styles.restorantiFotoBosh]}>
-                  <Text style={{ fontSize: 22 }}>🍽️</Text>
+            <View key={r.id} style={[styles.restorantiRresht, { backgroundColor: tema.kart }]}>
+              <TouchableOpacity
+                style={styles.restorantiMaja}
+                onPress={() => router.push(`/restaurant/${r.id}`)}
+                activeOpacity={0.85}
+              >
+                {r.image_url ? (
+                  <Image source={{ uri: r.image_url }} style={styles.restorantiFoto} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.restorantiFoto, styles.restorantiFotoBosh]}>
+                    <Text style={{ fontSize: 22 }}>🍽️</Text>
+                  </View>
+                )}
+                <View style={styles.restorantiTeksti}>
+                  <Text style={[styles.restorantiEmri, { color: tema.tekst }]} numberOfLines={1}>
+                    {r.name_sq || r.name}
+                  </Text>
+                  <Text style={[styles.restorantiMeta, { color: tema.tekstDytësor }]} numberOfLines={1}>
+                    {[r.category, r.city].filter(Boolean).join(" · ") || "Pa kategori"}
+                  </Text>
                 </View>
-              )}
-              <View style={styles.restorantiTeksti}>
-                <Text style={[styles.restorantiEmri, { color: tema.tekst }]} numberOfLines={1}>
-                  {r.name_sq || r.name}
-                </Text>
-                <Text style={[styles.restorantiMeta, { color: tema.tekstDytësor }]} numberOfLines={1}>
-                  {[r.category, r.city].filter(Boolean).join(" · ") || "Pa kategori"}
-                </Text>
-              </View>
-              <Text style={[styles.shigjeta, { color: tema.kryesor }]}>›</Text>
-            </TouchableOpacity>
+                <Text style={[styles.shigjeta, { color: tema.kryesor }]}>›</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.fshiButoni}
+                onPress={() => fshiRestorantin(r)}
+                disabled={dukeFshire === r.id}
+                accessibilityLabel="Fshi restorantin"
+              >
+                <Text style={styles.fshiIkona}>{dukeFshire === r.id ? "…" : "🗑️"}</Text>
+              </TouchableOpacity>
+            </View>
           ))
         )}
       </View>
@@ -346,12 +451,78 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 16,
     padding: 10,
-    gap: 12,
+    gap: 6,
     shadowColor: "#2E1065",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 6,
     elevation: 2,
+  },
+  restorantiMaja: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  fshiButoni: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEE2E2",
+  },
+  fshiIkona: {
+    fontSize: 18,
+  },
+  besnikKarta: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    gap: 6,
+  },
+  besnikRresht: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
+  besnikNumri: {
+    fontSize: 26,
+    fontWeight: "800",
+  },
+  besnikTeksti: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  kuponRresht: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#F5F3FF",
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 2,
+  },
+  kuponIkona: {
+    fontSize: 22,
+  },
+  kuponTitulli: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  kuponKodi: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  progresShirit: {
+    height: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+    marginTop: 2,
+  },
+  progresMbushe: {
+    height: "100%",
+    borderRadius: 999,
   },
   restorantiFoto: {
     width: 56,

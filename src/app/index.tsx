@@ -14,11 +14,13 @@ import {
 } from "react-native";
 import { Link, router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { OfertatJaves } from "@/components/OfertatJaves";
 import { useCart } from "@/context/CartContext";
 import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { DEMO_RESTAURANTS } from "@/data/demo";
+import { bashkoKatalogun } from "@/lib/katalogu";
 import { supabase } from "@/lib/supabase";
 import { Restaurant } from "@/types";
 
@@ -59,7 +61,7 @@ export default function Home() {
         return;
       }
 
-      setRestaurants(data || []);
+      setRestaurants(bashkoKatalogun(data || []));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -171,6 +173,7 @@ export default function Home() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={<OfertatJaves />}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => fetchRestaurants(true)} colors={[tema.kryesor]} />
         }

@@ -4,6 +4,7 @@ import { SplashScreen, Stack } from "expo-router";
 import { ButoniDil } from "@/components/ButoniDil";
 import { ButoniHyr } from "@/components/ButoniHyr";
 import { ButoniProfili } from "@/components/ButoniProfili";
+import { BesnikeriaProvider } from "@/context/BesnikeriaContext";
 import { CartProvider } from "@/context/CartContext";
 import { LokacioniProvider } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
@@ -17,9 +18,11 @@ export default function RootLayout() {
     <SesioniProvider>
       <VizitoriProvider>
         <LokacioniProvider>
-          <CartProvider>
-            <Harta />
-          </CartProvider>
+          <BesnikeriaProvider>
+            <CartProvider>
+              <Harta />
+            </CartProvider>
+          </BesnikeriaProvider>
         </LokacioniProvider>
       </VizitoriProvider>
     </SesioniProvider>

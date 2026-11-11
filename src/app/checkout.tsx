@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 
 import { useCart } from "@/context/CartContext";
+import { PRAGU_KUPONIT, useBesnikeria } from "@/context/BesnikeriaContext";
 import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
@@ -21,6 +22,7 @@ type Pagesa = "cash" | "karte";
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
+  const { kuponAktiv, perdorKupon, regjistroPorosi, progresi } = useBesnikeria();
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { qyteti, ndryshoQytetin } = useLokacioni();
   const tema = useTema();
@@ -28,6 +30,10 @@ export default function Checkout() {
   const [telefoni, setTelefoni] = useState("");
   const [shenime, setShenime] = useState("");
   const [pagesa, setPagesa] = useState<Pagesa>("cash");
+  const [perdorKuponin, setPerdorKuponin] = useState(false);
+
+  const zbritja = perdorKuponin && kuponAktiv ? (total * kuponAktiv.zbritje) / 100 : 0;
+  const totaliFundit = Math.max(0, total - zbritja);
 
   function porosit() {
     if (!adresa.trim()) {
@@ -51,16 +57,33 @@ export default function Checkout() {
       .join("\n");
     const metoda = pagesa === "cash" ? "Cash në dorëzim" : "Kartë në dorëzim";
     const shenimi = shenime.trim() ? `Shënime: ${shenime.trim()}\n` : "";
+    const kuponTeksti =
+      zbritja > 0 && kuponAktiv
+        ? `Kupon: ${kuponAktiv.kodi} (−${kuponAktiv.zbritje}%)\nZbritja: −€${zbritja.toFixed(2)}\n`
+        : "";
 
     Alert.alert(
       "Porosia u dërgua",
-      `Qyteti: ${qyteti}\nAdresa: ${adresa.trim()}\nTelefoni: ${telefoni.trim()}\nPagesa: ${metoda}\n${shenimi}\n${rreshtat}\n\nTotali: €${total.toFixed(2)}`,
+      `Qyteti: ${qyteti}\nAdresa: ${adresa.trim()}\nTelefoni: ${telefoni.trim()}\nPagesa: ${metoda}\n${shenimi}${kuponTeksti}\n${rreshtat}\n\nTotali: €${totaliFundit.toFixed(2)}`,
       [
         {
           text: "OK",
           onPress: () => {
+            if (zbritja > 0 && kuponAktiv) perdorKupon(kuponAktiv.id);
+
+            const rezultati = regjistroPorosi();
             clearCart();
             router.replace("/");
+
+            if (rezultati.fitoiKupon && rezultati.kupon) {
+              const kuponIRi = rezultati.kupon;
+              setTimeout(() => {
+                Alert.alert(
+                  "Urime! 🎉",
+                  `Fitove një kupon ${kuponIRi.zbritje}% për porosinë e radhës.\nKodi: ${kuponIRi.kodi}\n\nE gjesh te Profili im.`
+                );
+              }, 500);
+            }
           },
         },
       ]
@@ -200,6 +223,61 @@ export default function Checkout() {
           multiline
         />
 
+        {kuponAktiv ? (
+          <TouchableOpacity
+            style={[
+              styles.kuponKarta,
+              {
+                borderColor: perdorKuponin ? tema.kryesor : tema.kufi,
+                backgroundColor: perdorKuponin ? tema.kryesorSfond : tema.kart,
+              },
+            ]}
+            onPress={() => setPerdorKuponin((v) => !v)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.kuponMaja}>
+              <Text style={styles.kuponIkona}>🎟️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>
+                  Kupon −{kuponAktiv.zbritje}%
+                </Text>
+                <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
+                  Kodi: {kuponAktiv.kodi} · trokit për ta {perdorKuponin ? "hequr" : "përdorur"}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.kuponCheck,
+                  {
+                    borderColor: tema.kryesor,
+                    backgroundColor: perdorKuponin ? tema.kryesor : "transparent",
+                  },
+                ]}
+              >
+                {perdorKuponin ? <Text style={styles.kuponCheckTeksti}>✓</Text> : null}
+              </View>
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.kuponProgres, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
+            <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>🎟️ Besnikëria UniBite</Text>
+            <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
+              {progresi}/{PRAGU_KUPONIT} porosi drejt kuponit të radhës −10%
+            </Text>
+            <View style={[styles.progresShirit, { backgroundColor: tema.kryesorSfond }]}>
+              <View
+                style={[
+                  styles.progresMbushe,
+                  {
+                    width: `${(progresi / PRAGU_KUPONIT) * 100}%`,
+                    backgroundColor: tema.kryesor,
+                  },
+                ]}
+              />
+            </View>
+          </View>
+        )}
+
         <View style={[styles.summary, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
           <Text style={[styles.summaryTitle, { color: tema.tekst }]}>Përmbledhja e porosisë</Text>
           {items.map((item) => (
@@ -212,9 +290,17 @@ export default function Checkout() {
               </Text>
             </View>
           ))}
+          {zbritja > 0 ? (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryItem, { color: tema.tekstDytësor }]}>Zbritja e kuponit</Text>
+              <Text style={[styles.summaryPrice, { color: "#15803D", fontWeight: "700" }]}>
+                −€{zbritja.toFixed(2)}
+              </Text>
+            </View>
+          ) : null}
           <View style={[styles.summaryTotalRow, { borderTopColor: tema.kufi }]}>
             <Text style={[styles.summaryTotalLabel, { color: tema.tekst }]}>Totali</Text>
-            <Text style={[styles.summaryTotal, { color: tema.kryesor }]}>€{total.toFixed(2)}</Text>
+            <Text style={[styles.summaryTotal, { color: tema.kryesor }]}>€{totaliFundit.toFixed(2)}</Text>
           </View>
         </View>
 
@@ -278,6 +364,58 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 8,
     alignItems: "center",
+  },
+  kuponKarta: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 6,
+  },
+  kuponMaja: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  kuponIkona: {
+    fontSize: 22,
+  },
+  kuponTitulli: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  kuponKodi: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  kuponCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  kuponCheckTeksti: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  kuponProgres: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 6,
+    gap: 4,
+  },
+  progresShirit: {
+    height: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  progresMbushe: {
+    height: "100%",
+    borderRadius: 999,
   },
   summary: {
     borderWidth: 1,

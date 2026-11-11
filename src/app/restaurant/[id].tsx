@@ -16,6 +16,7 @@ import { useCart } from "@/context/CartContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { DEMO_MENU_ITEMS, DEMO_RESTAURANTS } from "@/data/demo";
+import { bashkoMenune, plotesoRestorantin } from "@/lib/katalogu";
 import { supabase } from "@/lib/supabase";
 import { MenuItem, Restaurant } from "@/types";
 
@@ -63,8 +64,10 @@ export default function RestaurantDetail() {
         return;
       }
 
-      setRestoranti(restData ?? null);
-      setMenuItems(menuData || []);
+      setRestoranti(
+        restData ? plotesoRestorantin(restData) : DEMO_RESTAURANTS.find((r) => r.id === id) ?? null
+      );
+      setMenuItems(bashkoMenune(menuData || [], id as string));
     } catch (err: any) {
       setError(err.message);
     } finally {
