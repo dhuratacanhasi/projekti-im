@@ -170,6 +170,11 @@ const ANGLISHT: Record<string, string> = {
   "në shportë": "in cart",
   restorante: "restaurants",
   qyteti: "city",
+  "qyteti i llogarisë": "account city",
+  "Lokacioni i llogarisë": "Account location",
+  "Ky qytet ruhet me llogarinë tuaj dhe nuk ndryshon kur zgjidhni një qytet tjetër për porosi.":
+    "This city is saved with your account and does not change when you choose another city for an order.",
+  "Zgjidh qytetin e llogarisë: {qyteti}": "Choose account city: {qyteti}",
   "Besnikëria UniBite": "UniBite Loyalty",
   "porosi të përfunduara": "completed orders",
   "{n} kuponë aktivë −10%": "{n} active −10% coupons",

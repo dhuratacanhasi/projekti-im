@@ -14,7 +14,7 @@ import { router, useFocusEffect } from "expo-router";
 import { ZgjedhesiGjuhes } from "@/components/ButoniGjuhes";
 import { PRAGU_KUPONIT, useBesnikeria } from "@/context/BesnikeriaContext";
 import { useCart } from "@/context/CartContext";
-import { useLokacioni } from "@/context/LokacioniContext";
+import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { useGjuha } from "@/i18n/GjuhaContext";
@@ -28,7 +28,7 @@ export default function Profili() {
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { itemCount } = useCart();
   const { porosite, progresi, kuponat } = useBesnikeria();
-  const { qyteti } = useLokacioni();
+  const { qytetiLlogarise, ndryshoQytetinLlogarise } = useLokacioni();
   const tema = useTema();
   const { t } = useGjuha();
   const [restorantet, setRestorantet] = useState<Restaurant[]>([]);
@@ -182,10 +182,59 @@ export default function Profili() {
         <View style={[styles.statistikaKarta, { backgroundColor: tema.kart }]}>
           <Text style={styles.statistikaFigura}>📍</Text>
           <Text style={[styles.statistikaVlera, { color: tema.kryesor }]} numberOfLines={1}>
-            {qyteti}
+            {qytetiLlogarise}
           </Text>
-          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>{t("qyteti")}</Text>
+          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>
+            {t("qyteti i llogarisë")}
+          </Text>
         </View>
+      </View>
+
+      <View style={styles.seksioni}>
+        <View style={styles.seksioniKoka}>
+          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>
+            {t("Lokacioni i llogarisë")}
+          </Text>
+          <Text style={[styles.shtoLink, { color: tema.kryesor }]}>📍</Text>
+        </View>
+        <Text style={[styles.lokacioniShenim, { color: tema.tekstDytësor }]}>
+          {t(
+            "Ky qytet ruhet me llogarinë tuaj dhe nuk ndryshon kur zgjidhni një qytet tjetër për porosi."
+          )}
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.qytetetRow}
+        >
+          {QYTETET.map((q) => {
+            const zgjedhur = q === qytetiLlogarise;
+            return (
+              <TouchableOpacity
+                key={q}
+                style={[
+                  styles.qytetiChip,
+                  {
+                    borderColor: tema.kryesor,
+                    backgroundColor: zgjedhur ? tema.kryesor : tema.kart,
+                  },
+                ]}
+                onPress={() => ndryshoQytetinLlogarise(q)}
+                accessibilityLabel={t("Zgjidh qytetin e llogarisë: {qyteti}", { qyteti: q })}
+              >
+                <Text
+                  style={{
+                    color: zgjedhur ? tema.butonTekst : tema.kryesor,
+                    fontWeight: "600",
+                    fontSize: 13,
+                  }}
+                >
+                  {q}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       <View style={styles.seksioni}>
@@ -438,6 +487,22 @@ const styles = StyleSheet.create({
   shtoLink: {
     fontSize: 14,
     fontWeight: "700",
+  },
+  lokacioniShenim: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: -4,
+  },
+  qytetetRow: {
+    gap: 8,
+    paddingVertical: 4,
+    paddingRight: 8,
+  },
+  qytetiChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
   bosh: {
     borderRadius: 16,
