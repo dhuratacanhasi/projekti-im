@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import "expo-sqlite/localStorage/install";
 
+import { useSesioni } from "@/lib/sesioni";
+
 // Programi i besnikërisë: çdo 10 porosi të përfunduara fiton një kupon 10%.
-// Të dhënat ruhen lokalisht në telefon (localStorage i expo-sqlite).
+// Të dhënat ruhen lokalisht në telefon, të ndara për çdo llogari.
 export type Kupon = {
   id: string;
   kodi: string;
@@ -27,42 +29,82 @@ type BesnikeriaContextType = {
 
 const BesnikeriaContext = createContext<BesnikeriaContextType | undefined>(undefined);
 
-function lexoNumrin(): number {
+function celesi(baza: string, perdoruesId: string): string {
+  return `${baza}:${perdoruesId}`;
+}
+
+// Të dhënat e vjetra ishin të përbashkëta për gjithë telefonin. Herën e parë
+// që hyn një llogari, ato kalojnë te ajo llogari dhe çelësi i vjetër fshihet.
+function migroTeLlogaria(baza: string, perdoruesId: string) {
   try {
-    const vlera = Number(localStorage.getItem(CELESI_POROSI) ?? "0");
+    const iRi = celesi(baza, perdoruesId);
+    if (localStorage.getItem(iRi) !== null) return;
+    const iVjeter = localStorage.getItem(baza);
+    if (iVjeter !== null) {
+      localStorage.setItem(iRi, iVjeter);
+      localStorage.removeItem(baza);
+    }
+  } catch {
+    // Ruajtja lokale mund të dështojë në web.
+  }
+}
+
+function lexoNumrin(perdoruesId: string): number {
+  try {
+    const vlera = Number(localStorage.getItem(celesi(CELESI_POROSI, perdoruesId)) ?? "0");
     return Number.isFinite(vlera) && vlera > 0 ? Math.floor(vlera) : 0;
   } catch {
     return 0;
   }
 }
 
-function lexoKuponat(): Kupon[] {
+function lexoKuponat(perdoruesId: string): Kupon[] {
   try {
-    const vlera = JSON.parse(localStorage.getItem(CELESI_KUPONA) ?? "[]");
+    const vlera = JSON.parse(localStorage.getItem(celesi(CELESI_KUPONA, perdoruesId)) ?? "[]");
     return Array.isArray(vlera) ? (vlera as Kupon[]) : [];
   } catch {
     return [];
   }
 }
 
-function ruajKuponat(kuponat: Kupon[]) {
+function ruajNumrin(perdoruesId: string, numri: number) {
   try {
-    localStorage.setItem(CELESI_KUPONA, JSON.stringify(kuponat));
+    localStorage.setItem(celesi(CELESI_POROSI, perdoruesId), String(numri));
   } catch {
-    // Ruajtja lokale mund të dështojë në web; app-i vazhdon në kujtesë.
+    // ignore
+  }
+}
+
+function ruajKuponat(perdoruesId: string, kuponat: Kupon[]) {
+  try {
+    localStorage.setItem(celesi(CELESI_KUPONA, perdoruesId), JSON.stringify(kuponat));
+  } catch {
+    // ignore
   }
 }
 
 export function BesnikeriaProvider({ children }: { children: ReactNode }) {
+  const { perdoruesi } = useSesioni();
+  const perdoruesId = perdoruesi?.id ?? null;
   const [porosite, setPorosite] = useState(0);
   const [kuponat, setKuponat] = useState<Kupon[]>([]);
 
   useEffect(() => {
-    setPorosite(lexoNumrin());
-    setKuponat(lexoKuponat());
-  }, []);
+    // Vizitori nuk ka porosi as kuponë; vetëm llogaria i sheh të vetat.
+    if (!perdoruesId) {
+      setPorosite(0);
+      setKuponat([]);
+      return;
+    }
+    migroTeLlogaria(CELESI_POROSI, perdoruesId);
+    migroTeLlogaria(CELESI_KUPONA, perdoruesId);
+    setPorosite(lexoNumrin(perdoruesId));
+    setKuponat(lexoKuponat(perdoruesId));
+  }, [perdoruesId]);
 
   function regjistroPorosi() {
+    if (!perdoruesId) return { fitoiKupon: false, kupon: null };
+
     const numriIRi = porosite + 1;
     let kuponIRi: Kupon | null = null;
 
@@ -76,23 +118,20 @@ export function BesnikeriaProvider({ children }: { children: ReactNode }) {
       };
       const lista = [...kuponat, kuponIRi];
       setKuponat(lista);
-      ruajKuponat(lista);
+      ruajKuponat(perdoruesId, lista);
     }
 
     setPorosite(numriIRi);
-    try {
-      localStorage.setItem(CELESI_POROSI, String(numriIRi));
-    } catch {
-      // ignore
-    }
+    ruajNumrin(perdoruesId, numriIRi);
 
     return { fitoiKupon: kuponIRi !== null, kupon: kuponIRi };
   }
 
   function perdorKupon(id: string) {
+    if (!perdoruesId) return;
     const lista = kuponat.map((k) => (k.id === id ? { ...k, perdorur: true } : k));
     setKuponat(lista);
-    ruajKuponat(lista);
+    ruajKuponat(perdoruesId, lista);
   }
 
   const kuponAktiv = kuponat.find((k) => !k.perdorur) ?? null;

@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import "expo-sqlite/localStorage/install";
 
+import { useSesioni } from "@/lib/sesioni";
+
 // Historiku i porosive dhe ndjekja e statusit. Ruhet lokalisht në telefon,
-// sepse app-i nuk ka tabelë porosish në Supabase.
+// i ndarë për çdo llogari, sepse app-i nuk ka tabelë porosish në Supabase.
 export type StatusiPorosise = "konfirmuar" | "pergatitje" | "rruges" | "derguar";
 
 export type ArtikullPorosie = {
@@ -56,18 +58,38 @@ export function indeksiStatusit(statusi: StatusiPorosise): number {
   return indeksi < 0 ? 0 : indeksi;
 }
 
-function lexoPorosite(): Porosi[] {
+function celesi(perdoruesId: string): string {
+  return `${CELESI}:${perdoruesId}`;
+}
+
+// Historiku i vjetër ishte i përbashkët për gjithë telefonin; kalon te llogaria
+// e parë që hyn, pastaj çelësi i vjetër fshihet.
+function migroTeLlogaria(perdoruesId: string) {
   try {
-    const vlera = JSON.parse(localStorage.getItem(CELESI) ?? "[]");
+    const iRi = celesi(perdoruesId);
+    if (localStorage.getItem(iRi) !== null) return;
+    const iVjeter = localStorage.getItem(CELESI);
+    if (iVjeter !== null) {
+      localStorage.setItem(iRi, iVjeter);
+      localStorage.removeItem(CELESI);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function lexoPorosite(perdoruesId: string): Porosi[] {
+  try {
+    const vlera = JSON.parse(localStorage.getItem(celesi(perdoruesId)) ?? "[]");
     return Array.isArray(vlera) ? (vlera as Porosi[]) : [];
   } catch {
     return [];
   }
 }
 
-function ruajPorosite(porosite: Porosi[]) {
+function ruajPorosite(perdoruesId: string, porosite: Porosi[]) {
   try {
-    localStorage.setItem(CELESI, JSON.stringify(porosite));
+    localStorage.setItem(celesi(perdoruesId), JSON.stringify(porosite));
   } catch {
     // Ruajtja lokale mund të dështojë në web; app-i vazhdon në kujtesë.
   }
@@ -76,20 +98,30 @@ function ruajPorosite(porosite: Porosi[]) {
 type PorositeContextType = {
   porosite: Porosi[];
   porosiaAktive: Porosi | null;
-  shtoPorosi: (porosi: Omit<Porosi, "id" | "kodi" | "krijuar">) => Porosi;
+  shtoPorosi: (porosi: Omit<Porosi, "id" | "kodi" | "krijuar">) => Porosi | null;
   pastroHistorikun: () => void;
 };
 
 const PorositeContext = createContext<PorositeContextType | undefined>(undefined);
 
 export function PorositeProvider({ children }: { children: ReactNode }) {
+  const { perdoruesi } = useSesioni();
+  const perdoruesId = perdoruesi?.id ?? null;
   const [porosite, setPorosite] = useState<Porosi[]>([]);
 
   useEffect(() => {
-    setPorosite(lexoPorosite());
-  }, []);
+    // Vizitori nuk ka historik porosish.
+    if (!perdoruesId) {
+      setPorosite([]);
+      return;
+    }
+    migroTeLlogaria(perdoruesId);
+    setPorosite(lexoPorosite(perdoruesId));
+  }, [perdoruesId]);
 
-  function shtoPorosi(porosi: Omit<Porosi, "id" | "kodi" | "krijuar">) {
+  function shtoPorosi(porosi: Omit<Porosi, "id" | "kodi" | "krijuar">): Porosi | null {
+    if (!perdoruesId) return null;
+
     const eRe: Porosi = {
       ...porosi,
       id: `porosi-${Date.now()}`,
@@ -98,13 +130,14 @@ export function PorositeProvider({ children }: { children: ReactNode }) {
     };
     const lista = [eRe, ...porosite];
     setPorosite(lista);
-    ruajPorosite(lista);
+    ruajPorosite(perdoruesId, lista);
     return eRe;
   }
 
   function pastroHistorikun() {
+    if (!perdoruesId) return;
     setPorosite([]);
-    ruajPorosite([]);
+    ruajPorosite(perdoruesId, []);
   }
 
   const porosiaAktive =
