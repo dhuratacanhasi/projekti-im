@@ -1,14 +1,14 @@
 import { Href, router, usePathname } from "expo-router";
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useBesnikeria } from "@/context/BesnikeriaContext";
 import { statusiPorosise, usePorosite } from "@/context/PorositeContext";
 import { useTema } from "@/context/TemaContext";
 
-const TABS: { emri: string; ikona: string; rruga: string }[] = [
-  { emri: "Restorantet", ikona: "🏠", rruga: "/" },
-  { emri: "Shpërblimet", ikona: "🎁", rruga: "/shperblimet" },
-  { emri: "Porositë", ikona: "📦", rruga: "/porosite" },
+const TABS: { emri: string; ikona: number; rruga: string }[] = [
+  { emri: "Restorantet", ikona: require("../../assets/images/nav/home.png"), rruga: "/" },
+  { emri: "Shpërblimet", ikona: require("../../assets/images/nav/gift.png"), rruga: "/shperblimet" },
+  { emri: "Porositë", ikona: require("../../assets/images/nav/shopping-bag.png"), rruga: "/porosite" },
 ];
 
 // Shiriti i poshtëm me tre faqet kryesore: restorantet, shpërblimet, porositë.
@@ -51,7 +51,17 @@ export function ShiritiPoshtem() {
             accessibilityLabel={tab.emri}
           >
             <View>
-              <Text style={[styles.ikona, { opacity: aktiv ? 1 : 0.55 }]}>{tab.ikona}</Text>
+              <Image
+                source={tab.ikona}
+                style={[
+                  styles.ikona,
+                  {
+                    tintColor: aktiv ? tema.kryesor : tema.tekstDytësor,
+                    opacity: aktiv ? 1 : 0.6,
+                  },
+                ]}
+                resizeMode="contain"
+              />
               {shenja > 0 ? (
                 <View style={styles.shenja}>
                   <Text style={styles.shenjaTeksti}>{shenja}</Text>
@@ -95,7 +105,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   ikona: {
-    fontSize: 20,
+    width: 23,
+    height: 23,
   },
   etiketa: {
     fontSize: 11,
