@@ -3,14 +3,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 
 import { OFERTAT, diteShqip, ofertaAktive } from "@/data/ofertat";
+import { useGjuha } from "@/i18n/GjuhaContext";
 
 // Seksioni "Ofertat e javës" në krye të listës.
 export function OfertatJaves() {
+  const { t, gjuha } = useGjuha();
+
   return (
     <View style={styles.seksioni}>
       <View style={styles.koka}>
-        <Text style={styles.titulli}>Ofertat e javës</Text>
-        <Text style={styles.nentitulli}>Combo dhe zbritje sipas ditës e orarit</Text>
+        <Text style={styles.titulli}>{t("Ofertat e javës")}</Text>
+        <Text style={styles.nentitulli}>{t("Combo dhe zbritje sipas ditës e orarit")}</Text>
       </View>
 
       <ScrollView
@@ -40,19 +43,19 @@ export function OfertatJaves() {
 
               {aktive ? (
                 <View style={styles.aktive}>
-                  <Text style={styles.aktiveTeksti}>● Aktive tani</Text>
+                  <Text style={styles.aktiveTeksti}>{t("● Aktive tani")}</Text>
                 </View>
               ) : null}
 
               <View style={styles.teksti}>
                 <Text style={styles.titulliKarte} numberOfLines={1}>
-                  {oferta.titulli}
+                  {t(oferta.titulli)}
                 </Text>
                 <Text style={styles.pershkrimi} numberOfLines={2}>
-                  {oferta.pershkrimi}
+                  {t(oferta.pershkrimi)}
                 </Text>
                 <Text style={styles.orari}>
-                  🕒 {diteShqip(oferta.ditet)} · {oferta.nga}–{oferta.deri}
+                  🕒 {diteShqip(oferta.ditet, gjuha)} · {oferta.nga}–{oferta.deri}
                 </Text>
               </View>
             </Pressable>

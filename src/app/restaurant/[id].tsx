@@ -16,6 +16,7 @@ import { useCart } from "@/context/CartContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { DEMO_MENU_ITEMS, DEMO_RESTAURANTS } from "@/data/demo";
+import { useGjuha } from "@/i18n/GjuhaContext";
 import { bashkoMenune, plotesoRestorantin } from "@/lib/katalogu";
 import { supabase } from "@/lib/supabase";
 import { MenuItem, Restaurant } from "@/types";
@@ -25,6 +26,7 @@ export default function RestaurantDetail() {
   const { addToCart } = useCart();
   const { eshteVizitor } = useVizitori();
   const tema = useTema();
+  const { t, eshteAnglisht } = useGjuha();
   const [restoranti, setRestoranti] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,21 +87,24 @@ export default function RestaurantDetail() {
   );
 
   // Artikujt grupohen sipas kategorisë për një menu më të lexueshme.
+  const kategoriaTjeter = t("Të tjera");
   const seksionet = useMemo(() => {
     const mapa = new Map<string, MenuItem[]>();
     for (const artikull of menuItems) {
-      const kategoria = artikull.category || "Të tjera";
+      const kategoria = artikull.category || kategoriaTjeter;
       if (!mapa.has(kategoria)) mapa.set(kategoria, []);
       mapa.get(kategoria)!.push(artikull);
     }
     return Array.from(mapa.entries()).map(([title, data]) => ({ title, data }));
-  }, [menuItems]);
+  }, [menuItems, kategoriaTjeter]);
 
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
         <ActivityIndicator size="large" color={tema.kryesor} />
-        <Text style={[styles.loadingText, { color: tema.tekstDytësor }]}>Po ngarkohen produktet...</Text>
+        <Text style={[styles.loadingText, { color: tema.tekstDytësor }]}>
+          {t("Po ngarkohen produktet...")}
+        </Text>
       </View>
     );
   }
@@ -107,7 +112,7 @@ export default function RestaurantDetail() {
   if (error) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
-        <Text style={styles.errorTitle}>Gabim</Text>
+        <Text style={styles.errorTitle}>{t("Gabim")}</Text>
         <Text style={[styles.errorText, { color: tema.tekstDytësor }]}>{error}</Text>
       </View>
     );
@@ -116,14 +121,18 @@ export default function RestaurantDetail() {
   if (menuItems.length === 0) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
-        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>Nuk ka produkte në menunë</Text>
+        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>
+          {t("Nuk ka produkte në menunë")}
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: tema.sfond }]}>
-      <Stack.Screen options={{ title: restoranti?.name_sq || restoranti?.name || "Menuja" }} />
+      <Stack.Screen
+        options={{ title: restoranti?.name_sq || restoranti?.name || t("Menuja") }}
+      />
 
       <SectionList
         sections={seksionet}
@@ -149,7 +158,7 @@ export default function RestaurantDetail() {
               />
               <View style={styles.heroTekst}>
                 <Text style={styles.heroTitulli} numberOfLines={2}>
-                  {restoranti?.name_sq || restoranti?.name || "Restoranti"}
+                  {restoranti?.name_sq || restoranti?.name || t("Restoranti")}
                 </Text>
                 <View style={styles.heroMetaRow}>
                   {restoranti?.rating ? <Text style={styles.heroMeta}>★ {restoranti.rating}</Text> : null}
@@ -169,7 +178,7 @@ export default function RestaurantDetail() {
             {eshteVizitor && (
               <View style={[styles.vizitorBanner, { backgroundColor: tema.kryesorSfond, borderColor: tema.kryesor }]}>
                 <Text style={[styles.vizitorBannerText, { color: tema.kryesor }]}>
-                  Vizitor · Mund të shtoni në shportë, por për të porositur duhet llogari.
+                  {t("Vizitor · Mund të shtoni në shportë, por për të porositur duhet llogari.")}
                 </Text>
               </View>
             )}
@@ -190,11 +199,13 @@ export default function RestaurantDetail() {
 
             <View style={styles.itemBody}>
               <Text style={[styles.itemName, { color: tema.tekst }]} numberOfLines={2}>
-                {item.name_sq || item.name}
+                {eshteAnglisht ? item.name_en || item.name_sq || item.name : item.name_sq || item.name}
               </Text>
-              {(item.description_sq || item.description) && (
+              {(item.description_sq || item.description || item.description_en) && (
                 <Text style={[styles.description, { color: tema.tekstDytësor }]} numberOfLines={2}>
-                  {item.description_sq || item.description}
+                  {eshteAnglisht
+                    ? item.description_en || item.description_sq || item.description
+                    : item.description_sq || item.description}
                 </Text>
               )}
               <View style={styles.itemFooter}>
@@ -204,16 +215,19 @@ export default function RestaurantDetail() {
                   onPress={() => {
                     addToCart({
                       menuItemId: item.id,
-                      name: item.name_sq || item.name || "",
+                      name:
+                        (eshteAnglisht
+                          ? item.name_en || item.name_sq || item.name
+                          : item.name_sq || item.name) || "",
                       price: Number(item.price),
                       quantity: 1,
                       restaurantId: id as string,
                       restaurantName: restoranti?.name_sq || restoranti?.name || "",
                     });
-                    Alert.alert("Shtuar", "Produkti u shtua në shportë");
+                    Alert.alert(t("Shtuar"), t("Produkti u shtua në shportë"));
                   }}
                 >
-                  <Text style={styles.addToCartButtonText}>+ Shto</Text>
+                  <Text style={styles.addToCartButtonText}>{t("+ Shto")}</Text>
                 </TouchableOpacity>
               </View>
             </View>

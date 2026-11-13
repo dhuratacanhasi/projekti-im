@@ -11,11 +11,13 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
+import { ZgjedhesiGjuhes } from "@/components/ButoniGjuhes";
 import { PRAGU_KUPONIT, useBesnikeria } from "@/context/BesnikeriaContext";
 import { useCart } from "@/context/CartContext";
 import { useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 import { plotesoRestorantin } from "@/lib/katalogu";
 import { dil, useSesioni } from "@/lib/sesioni";
 import { supabase } from "@/lib/supabase";
@@ -28,6 +30,7 @@ export default function Profili() {
   const { porosite, progresi, kuponat } = useBesnikeria();
   const { qyteti } = useLokacioni();
   const tema = useTema();
+  const { t } = useGjuha();
   const [restorantet, setRestorantet] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [dukeDale, setDukeDale] = useState(false);
@@ -67,10 +70,10 @@ export default function Profili() {
   );
 
   async function dale() {
-    Alert.alert("Dil nga llogaria", "A jeni i sigurt që dëshironi të dilni?", [
-      { text: "Anulo", style: "cancel" },
+    Alert.alert(t("Dil nga llogaria"), t("A jeni i sigurt që dëshironi të dilni?"), [
+      { text: t("Anulo"), style: "cancel" },
       {
-        text: "Dil",
+        text: t("Dil"),
         style: "destructive",
         onPress: async () => {
           setDukeDale(true);
@@ -79,7 +82,7 @@ export default function Profili() {
             dilSiVizitor();
           } catch (e) {
             setDukeDale(false);
-            Alert.alert("Dalja nuk u krye", (e as Error).message);
+            Alert.alert(t("Dalja nuk u krye"), (e as Error).message);
           }
         },
       },
@@ -91,12 +94,12 @@ export default function Profili() {
     const emri = r.name_sq || r.name;
 
     Alert.alert(
-      "Fshi restorantin",
-      `A jeni i sigurt që dëshironi të fshini "${emri}"? Ky veprim nuk kthehet.`,
+      t("Fshi restorantin"),
+      t('A jeni i sigurt që dëshironi të fshini "{emri}"? Ky veprim nuk kthehet.', { emri }),
       [
-        { text: "Anulo", style: "cancel" },
+        { text: t("Anulo"), style: "cancel" },
         {
-          text: "Fshi",
+          text: t("Fshi"),
           style: "destructive",
           onPress: async () => {
             setDukeFshire(r.id);
@@ -111,15 +114,15 @@ export default function Profili() {
 
               if (error) {
                 Alert.alert(
-                  "Nuk u fshi",
-                  `${error.message}\n\nPër të lejuar fshirjen, ekzekuto skedarin supabase/j6-fshirja.sql në Supabase → SQL Editor.`
+                  t("Nuk u fshi"),
+                  `${error.message}${t("\n\nPër të lejuar fshirjen, ekzekuto skedarin supabase/j6-fshirja.sql në Supabase → SQL Editor.")}`
                 );
                 return;
               }
 
               setRestorantet((lista) => lista.filter((x) => x.id !== r.id));
             } catch (e) {
-              Alert.alert("Gabim", (e as Error).message);
+              Alert.alert(t("Gabim"), (e as Error).message);
             } finally {
               setDukeFshire(null);
             }
@@ -134,12 +137,12 @@ export default function Profili() {
     return (
       <View style={[styles.qendra, { backgroundColor: tema.sfond }]}>
         <Text style={styles.figura}>👤</Text>
-        <Text style={[styles.paLLogariTitulli, { color: tema.tekst }]}>Nuk jeni i kyçur</Text>
+        <Text style={[styles.paLLogariTitulli, { color: tema.tekst }]}>{t("Nuk jeni i kyçur")}</Text>
         <Text style={[styles.paLLogariTeksti, { color: tema.tekstDytësor }]}>
-          Hyni ose krijoni llogari për të parë profilin dhe restorantet tuaja.
+          {t("Hyni ose krijoni llogari për të parë profilin dhe restorantet tuaja.")}
         </Text>
         <TouchableOpacity style={[styles.butoni, { backgroundColor: tema.kryesor }]} onPress={dilSiVizitor}>
-          <Text style={styles.butoniTeksti}>Hyr / Krijo llogari</Text>
+          <Text style={styles.butoniTeksti}>{t("Hyr / Krijo llogari")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -161,40 +164,42 @@ export default function Profili() {
           <Text style={styles.avatarTeksti}>{iniciali}</Text>
         </View>
         <Text style={styles.email}>{perdoruesi.email}</Text>
-        <Text style={styles.anetari}>Anëtar i UniBite</Text>
-        {eshteVizitor ? <Text style={styles.vizitorShenim}>Po shfletoni si vizitor</Text> : null}
+        <Text style={styles.anetari}>{t("Anëtar i UniBite")}</Text>
+        {eshteVizitor ? <Text style={styles.vizitorShenim}>{t("Po shfletoni si vizitor")}</Text> : null}
       </LinearGradient>
 
       <View style={styles.statistika}>
         <View style={[styles.statistikaKarta, { backgroundColor: tema.kart }]}>
           <Text style={styles.statistikaFigura}>🛒</Text>
           <Text style={[styles.statistikaVlera, { color: tema.kryesor }]}>{itemCount}</Text>
-          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>në shportë</Text>
+          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>{t("në shportë")}</Text>
         </View>
         <View style={[styles.statistikaKarta, { backgroundColor: tema.kart }]}>
           <Text style={styles.statistikaFigura}>🏪</Text>
           <Text style={[styles.statistikaVlera, { color: tema.kryesor }]}>{restorantet.length}</Text>
-          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>restorante</Text>
+          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>{t("restorante")}</Text>
         </View>
         <View style={[styles.statistikaKarta, { backgroundColor: tema.kart }]}>
           <Text style={styles.statistikaFigura}>📍</Text>
           <Text style={[styles.statistikaVlera, { color: tema.kryesor }]} numberOfLines={1}>
             {qyteti}
           </Text>
-          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>qyteti</Text>
+          <Text style={[styles.statistikaEmri, { color: tema.tekstDytësor }]}>{t("qyteti")}</Text>
         </View>
       </View>
 
       <View style={styles.seksioni}>
         <View style={styles.seksioniKoka}>
-          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>Besnikëria UniBite</Text>
+          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>{t("Besnikëria UniBite")}</Text>
           <Text style={[styles.shtoLink, { color: tema.kryesor }]}>🎟️</Text>
         </View>
 
         <View style={[styles.besnikKarta, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
           <View style={styles.besnikRresht}>
             <Text style={[styles.besnikNumri, { color: tema.kryesor }]}>{porosite}</Text>
-            <Text style={[styles.besnikTeksti, { color: tema.tekstDytësor }]}>porosi të përfunduara</Text>
+            <Text style={[styles.besnikTeksti, { color: tema.tekstDytësor }]}>
+              {t("porosi të përfunduara")}
+            </Text>
           </View>
 
           {kuponat.filter((k) => !k.perdorur).length > 0 ? (
@@ -202,7 +207,7 @@ export default function Profili() {
               <Text style={styles.kuponIkona}>🎟️</Text>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>
-                  {kuponat.filter((k) => !k.perdorur).length} kuponë aktivë −10%
+                  {t("{n} kuponë aktivë −10%", { n: kuponat.filter((k) => !k.perdorur).length })}
                 </Text>
                 <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
                   {kuponat
@@ -215,7 +220,10 @@ export default function Profili() {
           ) : (
             <>
               <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
-                {progresi}/{PRAGU_KUPONIT} porosi drejt kuponit të radhës −10%
+                {t("{progresi}/{pragu} porosi drejt kuponit të radhës −10%", {
+                  progresi,
+                  pragu: PRAGU_KUPONIT,
+                })}
               </Text>
               <View style={[styles.progresShirit, { backgroundColor: tema.kryesorSfond }]}>
                 <View
@@ -235,9 +243,9 @@ export default function Profili() {
 
       <View style={styles.seksioni}>
         <View style={styles.seksioniKoka}>
-          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>Restorantet e mia</Text>
+          <Text style={[styles.seksioniTitulli, { color: tema.tekst }]}>{t("Restorantet e mia")}</Text>
           <TouchableOpacity onPress={() => router.push("/add-restaurant")}>
-            <Text style={[styles.shtoLink, { color: tema.kryesor }]}>+ Shto</Text>
+            <Text style={[styles.shtoLink, { color: tema.kryesor }]}>{t("+ Shto")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -246,15 +254,15 @@ export default function Profili() {
         ) : restorantet.length === 0 ? (
           <View style={[styles.bosh, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
             <Text style={styles.boshFigura}>🍽️</Text>
-            <Text style={[styles.boshTitulli, { color: tema.tekst }]}>Nuk keni restorante</Text>
+            <Text style={[styles.boshTitulli, { color: tema.tekst }]}>{t("Nuk keni restorante")}</Text>
             <Text style={[styles.boshTeksti, { color: tema.tekstDytësor }]}>
-              Shtoni restorantin tuaj të parë dhe do të shfaqet këtu.
+              {t("Shtoni restorantin tuaj të parë dhe do të shfaqet këtu.")}
             </Text>
             <TouchableOpacity
               style={[styles.butoni, styles.butoniVogel, { backgroundColor: tema.kryesor }]}
               onPress={() => router.push("/add-restaurant")}
             >
-              <Text style={styles.butoniTeksti}>Shto restorant</Text>
+              <Text style={styles.butoniTeksti}>{t("Shto restorant")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -277,7 +285,7 @@ export default function Profili() {
                     {r.name_sq || r.name}
                   </Text>
                   <Text style={[styles.restorantiMeta, { color: tema.tekstDytësor }]} numberOfLines={1}>
-                    {[r.category, r.city].filter(Boolean).join(" · ") || "Pa kategori"}
+                    {[r.category, r.city].filter(Boolean).join(" · ") || t("Pa kategori")}
                   </Text>
                 </View>
                 <Text style={[styles.shigjeta, { color: tema.kryesor }]}>›</Text>
@@ -287,7 +295,7 @@ export default function Profili() {
                 style={styles.fshiButoni}
                 onPress={() => fshiRestorantin(r)}
                 disabled={dukeFshire === r.id}
-                accessibilityLabel="Fshi restorantin"
+                accessibilityLabel={t("Fshi restorantin")}
               >
                 <Text style={styles.fshiIkona}>{dukeFshire === r.id ? "…" : "🗑️"}</Text>
               </TouchableOpacity>
@@ -296,15 +304,19 @@ export default function Profili() {
         )}
       </View>
 
+      <View style={styles.seksioni}>
+        <ZgjedhesiGjuhes />
+      </View>
+
       <TouchableOpacity
         style={[styles.dalja, { borderColor: "#FCA5A5" }, dukeDale && styles.duke]}
         onPress={dale}
         disabled={dukeDale}
       >
-        <Text style={styles.daljaTeksti}>{dukeDale ? "Po dilni…" : "Dil nga llogaria"}</Text>
+        <Text style={styles.daljaTeksti}>{dukeDale ? t("Po dilni…") : t("Dil nga llogaria")}</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.versioni, { color: tema.tekstDytësor }]}>UniBite · versioni 1.0.0</Text>
+      <Text style={[styles.versioni, { color: tema.tekstDytësor }]}>{t("UniBite · versioni 1.0.0")}</Text>
     </ScrollView>
   );
 }

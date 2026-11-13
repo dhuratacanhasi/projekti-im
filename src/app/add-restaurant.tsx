@@ -4,12 +4,14 @@ import { router } from "expo-router";
 import { useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 import { supabase } from "@/lib/supabase";
 
 export default function AddRestaurant() {
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { qyteti } = useLokacioni();
   const tema = useTema();
+  const { t } = useGjuha();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [address, setAddress] = useState("");
@@ -18,7 +20,7 @@ export default function AddRestaurant() {
 
   async function handleSubmit() {
     if (!name.trim()) {
-      Alert.alert("Gabim", "Emri i restorantit është i detyrueshëm");
+      Alert.alert(t("Gabim"), t("Emri i restorantit është i detyrueshëm"));
       return;
     }
 
@@ -38,18 +40,18 @@ export default function AddRestaurant() {
       ]);
 
       if (error) {
-        Alert.alert("Gabim", error.message);
+        Alert.alert(t("Gabim"), error.message);
         return;
       }
 
-      Alert.alert("Sukses", "Restoranti u shtua me sukses!", [
+      Alert.alert(t("Sukses"), t("Restoranti u shtua me sukses!"), [
         {
           text: "OK",
           onPress: () => router.back(),
         },
       ]);
     } catch (err: any) {
-      Alert.alert("Gabim", err.message);
+      Alert.alert(t("Gabim"), err.message);
     } finally {
       setLoading(false);
     }
@@ -58,12 +60,12 @@ export default function AddRestaurant() {
   if (eshteVizitor) {
     return (
       <View style={[styles.container, { backgroundColor: tema.sfond }]}>
-        <Text style={[styles.title, { color: tema.kryesor }]}>Kërkohet llogari</Text>
+        <Text style={[styles.title, { color: tema.kryesor }]}>{t("Kërkohet llogari")}</Text>
         <Text style={[styles.guardText, { color: tema.tekstDytësor }]}>
-          Për të shtuar restorant duhet të hyni ose të krijoni llogari.
+          {t("Për të shtuar restorant duhet të hyni ose të krijoni llogari.")}
         </Text>
         <TouchableOpacity style={[styles.button, { backgroundColor: tema.kryesor }]} onPress={dilSiVizitor}>
-          <Text style={styles.buttonText}>Hyr / Krijo llogari</Text>
+          <Text style={styles.buttonText}>{t("Hyr / Krijo llogari")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -71,37 +73,37 @@ export default function AddRestaurant() {
 
   return (
     <View style={[styles.container, { backgroundColor: tema.sfond }]}>
-      <Text style={[styles.title, { color: tema.kryesor }]}>Shto Restorant</Text>
+      <Text style={[styles.title, { color: tema.kryesor }]}>{t("Shto Restorant")}</Text>
 
       <View style={styles.form}>
-        <Text style={[styles.label, { color: tema.tekst }]}>Emri i restorantit *</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Emri i restorantit *")}</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={name}
           onChangeText={setName}
-          placeholder="p.sh. Pizza House"
+          placeholder={t("p.sh. Pizza House")}
           placeholderTextColor={tema.tekstDytësor}
         />
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Kategoria</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Kategoria")}</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={category}
           onChangeText={setCategory}
-          placeholder="p.sh. Pizza, Fast Food"
+          placeholder={t("p.sh. Pizza, Fast Food")}
           placeholderTextColor={tema.tekstDytësor}
         />
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Adresa</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Adresa")}</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={address}
           onChangeText={setAddress}
-          placeholder="p.sh. Rruga Adem Jashari"
+          placeholder={t("p.sh. Rruga Adem Jashari")}
           placeholderTextColor={tema.tekstDytësor}
         />
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Qyteti</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Qyteti")}</Text>
         <View
           style={[
             styles.input,
@@ -112,15 +114,15 @@ export default function AddRestaurant() {
           <Text style={[styles.qytetiTeksti, { color: tema.tekst }]}>📍 {qyteti}</Text>
         </View>
         <Text style={[styles.ndihme, { color: tema.tekstDytësor }]}>
-          Qyteti merret nga zgjedhja në krye të aplikacionit.
+          {t("Qyteti merret nga zgjedhja në krye të aplikacionit.")}
         </Text>
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Koha e dorëzimit</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Koha e dorëzimit")}</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={deliveryTime}
           onChangeText={setDeliveryTime}
-          placeholder="p.sh. 20-30 min"
+          placeholder={t("p.sh. 20-30 min")}
           placeholderTextColor={tema.tekstDytësor}
         />
 
@@ -129,7 +131,7 @@ export default function AddRestaurant() {
           onPress={handleSubmit}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? "Po ruhet..." : "Ruaj"}</Text>
+          <Text style={styles.buttonText}>{loading ? t("Po ruhet...") : t("Ruaj")}</Text>
         </TouchableOpacity>
       </View>
     </View>

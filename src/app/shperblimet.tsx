@@ -5,10 +5,12 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { ShiritiPoshtem } from "@/components/ShiritiPoshtem";
 import { PRAGU_KUPONIT, useBesnikeria } from "@/context/BesnikeriaContext";
 import { useTema } from "@/context/TemaContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 
 export default function Shperblimet() {
   const { porosite, progresi, kuponat } = useBesnikeria();
   const tema = useTema();
+  const { t } = useGjuha();
 
   const aktivet = kuponat.filter((k) => !k.perdorur);
   const tePerdorur = kuponat.filter((k) => k.perdorur);
@@ -24,9 +26,9 @@ export default function Shperblimet() {
           style={styles.hero}
         >
           <Text style={styles.heroIkona}>🎁</Text>
-          <Text style={styles.heroTitulli}>Shpërblimet UniBite</Text>
+          <Text style={styles.heroTitulli}>{t("Shpërblimet UniBite")}</Text>
           <Text style={styles.heroTeksti}>
-            Çdo {PRAGU_KUPONIT} porosi = kupon −10% që aplikohet automatikisht
+            {t("Çdo {n} porosi = kupon −10% që aplikohet automatikisht", { n: PRAGU_KUPONIT })}
           </Text>
 
           <View style={styles.heroShirit}>
@@ -38,24 +40,29 @@ export default function Shperblimet() {
             />
           </View>
           <Text style={styles.heroProgres}>
-            {porosite} porosi gjithsej · edhe {mbetura} për kuponin e radhës
+            {t("{porosite} porosi gjithsej · edhe {mbetura} për kuponin e radhës", {
+              porosite,
+              mbetura,
+            })}
           </Text>
         </LinearGradient>
 
-        <Text style={[styles.seksioni, { color: tema.tekst }]}>Kuponët e mi</Text>
+        <Text style={[styles.seksioni, { color: tema.tekst }]}>{t("Kuponët e mi")}</Text>
 
         {aktivet.length === 0 ? (
           <View style={[styles.bosh, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
             <Text style={styles.boshIkona}>🎟️</Text>
-            <Text style={[styles.boshTitulli, { color: tema.tekst }]}>Nuk ke kupon aktiv</Text>
+            <Text style={[styles.boshTitulli, { color: tema.tekst }]}>{t("Nuk ke kupon aktiv")}</Text>
             <Text style={[styles.boshTeksti, { color: tema.tekstDytësor }]}>
-              Porosit edhe {mbetura} herë dhe fiton një kupon −10% për porosinë tjetër.
+              {t("Porosit edhe {n} herë dhe fiton një kupon −10% për porosinë tjetër.", {
+                n: mbetura,
+              })}
             </Text>
             <TouchableOpacity
               style={[styles.butoni, { backgroundColor: tema.kryesor }]}
               onPress={() => router.navigate("/")}
             >
-              <Text style={styles.butoniTeksti}>Porosit tani</Text>
+              <Text style={styles.butoniTeksti}>{t("Porosit tani")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -68,37 +75,37 @@ export default function Shperblimet() {
                 <Text style={styles.kuponIkona}>🎟️</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>
-                    Kupon −{k.zbritje}%
+                    {t("Kupon −{zbritje}%", { zbritje: k.zbritje })}
                   </Text>
                   <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
-                    Kodi: {k.kodi}
+                    {t("Kodi: {kodi}", { kodi: k.kodi })}
                   </Text>
                 </View>
                 <View style={styles.aktivBadge}>
-                  <Text style={styles.aktivBadgeTeksti}>AKTIV</Text>
+                  <Text style={styles.aktivBadgeTeksti}>{t("AKTIV")}</Text>
                 </View>
               </View>
 
               <Text style={[styles.kuponShenim, { color: tema.kryesor }]}>
-                Aplikohet automatikisht kur të porosisësh.
+                {t("Aplikohet automatikisht kur të porosisësh.")}
               </Text>
 
               <TouchableOpacity
                 style={[styles.kuponButoni, { backgroundColor: tema.kryesor }]}
                 onPress={() => router.navigate("/")}
               >
-                <Text style={styles.kuponButoniTeksti}>Përdore tani</Text>
+                <Text style={styles.kuponButoniTeksti}>{t("Përdore tani")}</Text>
               </TouchableOpacity>
             </View>
           ))
         )}
 
-        <Text style={[styles.seksioni, { color: tema.tekst }]}>Si funksionon?</Text>
+        <Text style={[styles.seksioni, { color: tema.tekst }]}>{t("Si funksionon?")}</Text>
         <View style={[styles.udhezues, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
           {[
-            ["1", "Porosit ushqim nga UniBite."],
-            ["2", `Çdo ${PRAGU_KUPONIT} porosi fiton një kupon −10%.`],
-            ["3", "Kuponi aplikohet vetë në porosinë tjetër."],
+            ["1", t("Porosit ushqim nga UniBite.")],
+            ["2", t("Çdo {n} porosi fiton një kupon −10%.", { n: PRAGU_KUPONIT })],
+            ["3", t("Kuponi aplikohet vetë në porosinë tjetër.")],
           ].map(([numri, teksti]) => (
             <View key={numri} style={styles.hapi}>
               <View style={[styles.hapiNumri, { backgroundColor: tema.kryesorSfond }]}>
@@ -111,7 +118,7 @@ export default function Shperblimet() {
 
         {tePerdorur.length > 0 ? (
           <>
-            <Text style={[styles.seksioni, { color: tema.tekst }]}>Kuponë të përdorur</Text>
+            <Text style={[styles.seksioni, { color: tema.tekst }]}>{t("Kuponë të përdorur")}</Text>
             {tePerdorur.map((k) => (
               <View
                 key={k.id}
@@ -123,13 +130,13 @@ export default function Shperblimet() {
                 <Text style={styles.kuponIkona}>🎟️</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.kuponTitulli, { color: tema.tekstDytësor }]}>
-                    Kupon −{k.zbritje}%
+                    {t("Kupon −{zbritje}%", { zbritje: k.zbritje })}
                   </Text>
                   <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
-                    Kodi: {k.kodi}
+                    {t("Kodi: {kodi}", { kodi: k.kodi })}
                   </Text>
                 </View>
-                <Text style={[styles.perdorur, { color: tema.tekstDytësor }]}>Përdorur</Text>
+                <Text style={[styles.perdorur, { color: tema.tekstDytësor }]}>{t("Përdorur")}</Text>
               </View>
             ))}
           </>

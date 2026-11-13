@@ -1,18 +1,20 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 
+import { useGjuha } from "@/i18n/GjuhaContext";
 import { useSesioni } from "@/lib/sesioni";
 
 // Rrethi me inicialin e llogarisë në krye të listës; hap profilin.
 export function ButoniProfili() {
   const { perdoruesi } = useSesioni();
+  const { t } = useGjuha();
   const iniciali = (perdoruesi?.email ?? "?").charAt(0).toUpperCase();
 
   return (
     <Pressable
       onPress={() => router.push("/profili")}
       accessibilityRole="button"
-      accessibilityLabel="Profili im"
+      accessibilityLabel={t("Profili im")}
       hitSlop={8}
       style={styles.rrethi}
     >

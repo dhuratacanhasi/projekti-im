@@ -3,26 +3,28 @@ import { router } from "expo-router";
 import { useCart } from "@/context/CartContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 
 export default function Cart() {
   const { items, removeFromCart, updateQuantity, total } = useCart();
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const tema = useTema();
+  const { t } = useGjuha();
 
   function handleOrder() {
     if (items.length === 0) {
-      Alert.alert("Gabim", "Shporta është bosh");
+      Alert.alert(t("Gabim"), t("Shporta është bosh"));
       return;
     }
 
     // Porosia kërkon llogari; shporta ruhet dhe vazhdon pas hyrjes.
     if (eshteVizitor) {
       Alert.alert(
-        "Kërkohet llogari",
-        "Për të porositur duhet të hyni ose të krijoni llogari. Shporta juaj do të ruhet.",
+        t("Kërkohet llogari"),
+        t("Për të porositur duhet të hyni ose të krijoni llogari. Shporta juaj do të ruhet."),
         [
-          { text: "Anulo", style: "cancel" },
-          { text: "Hyr", onPress: dilSiVizitor },
+          { text: t("Anulo"), style: "cancel" },
+          { text: t("Hyr"), onPress: dilSiVizitor },
         ]
       );
       return;
@@ -34,9 +36,9 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: tema.sfond }]}>
-        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>Shporta është bosh</Text>
+        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>{t("Shporta është bosh")}</Text>
         <TouchableOpacity style={[styles.shopButton, { backgroundColor: tema.kryesor }]} onPress={() => router.push("/")}>
-          <Text style={styles.shopButtonText}>Kthehu te restorantet</Text>
+          <Text style={styles.shopButtonText}>{t("Kthehu te restorantet")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -53,7 +55,7 @@ export default function Cart() {
             <View style={styles.cardHeader}>
               <Text style={[styles.itemName, { color: tema.tekst }]}>{item.name}</Text>
               <TouchableOpacity onPress={() => removeFromCart(item.id)}>
-                <Text style={styles.removeText}>Fshi</Text>
+                <Text style={styles.removeText}>{t("Fshi")}</Text>
               </TouchableOpacity>
             </View>
             <Text style={[styles.price, { color: tema.tekstDytësor }]}>€{item.price.toFixed(2)}</Text>
@@ -81,15 +83,15 @@ export default function Cart() {
       <View style={[styles.footer, { backgroundColor: tema.kart, borderTopColor: tema.kufi }]}>
         {eshteVizitor && (
           <Text style={[styles.vizitorNote, { color: tema.tekstDytësor }]}>
-            Po shfletoni si vizitor. Për të porositur, hyni ose krijoni llogari.
+            {t("Po shfletoni si vizitor. Për të porositur, hyni ose krijoni llogari.")}
           </Text>
         )}
         <View style={styles.totalRow}>
-          <Text style={[styles.totalLabel, { color: tema.tekst }]}>Totali:</Text>
+          <Text style={[styles.totalLabel, { color: tema.tekst }]}>{t("Totali:")}</Text>
           <Text style={[styles.totalAmount, { color: tema.kryesor }]}>€{total.toFixed(2)}</Text>
         </View>
         <TouchableOpacity style={[styles.orderButton, { backgroundColor: tema.kryesor }]} onPress={handleOrder}>
-          <Text style={styles.orderButtonText}>Porosit tani</Text>
+          <Text style={styles.orderButtonText}>{t("Porosit tani")}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -4,6 +4,7 @@ import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react
 import { useBesnikeria } from "@/context/BesnikeriaContext";
 import { statusiPorosise, usePorosite } from "@/context/PorositeContext";
 import { useTema } from "@/context/TemaContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 
 const TABS: { emri: string; ikona: number; rruga: string }[] = [
   { emri: "Restorantet", ikona: require("../../assets/images/nav/home.png"), rruga: "/" },
@@ -15,6 +16,7 @@ const TABS: { emri: string; ikona: number; rruga: string }[] = [
 export function ShiritiPoshtem() {
   const rruga = usePathname();
   const tema = useTema();
+  const { t } = useGjuha();
   const { kuponat } = useBesnikeria();
   const { porosite } = usePorosite();
 
@@ -48,7 +50,7 @@ export function ShiritiPoshtem() {
             onPress={() => router.navigate(tab.rruga as Href)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={tab.emri}
+            accessibilityLabel={t(tab.emri)}
           >
             <View>
               <Image
@@ -77,7 +79,7 @@ export function ShiritiPoshtem() {
                 },
               ]}
             >
-              {tab.emri}
+              {t(tab.emri)}
             </Text>
           </TouchableOpacity>
         );

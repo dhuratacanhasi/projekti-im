@@ -1,5 +1,7 @@
 // Ofertat javore të UniBite. Janë të dhëna lokale: shfaqen për të gjithë
 // dhe tregojnë ditët/orarin kur zbritja është aktive.
+import type { Gjuha } from "@/i18n/GjuhaContext";
+
 export type Oferta = {
   id: string;
   titulli: string;
@@ -15,7 +17,10 @@ export type Oferta = {
 
 const foto = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=70`;
 
-const DITET_SHQIP = ["E diel", "E hënë", "E martë", "E mërkurë", "E enjte", "E premte", "E shtunë"];
+const DITET: Record<Gjuha, string[]> = {
+  sq: ["E diel", "E hënë", "E martë", "E mërkurë", "E enjte", "E premte", "E shtunë"],
+  en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+};
 
 export const OFERTAT: Oferta[] = [
   {
@@ -86,14 +91,18 @@ export const OFERTAT: Oferta[] = [
   },
 ];
 
-export function diteShqip(ditet: number[]): string {
-  if (ditet.length === 7) return "Çdo ditë";
-  if (ditet.length === 2 && ditet.includes(0) && ditet.includes(6)) return "Fundjavë";
+export function diteShqip(ditet: number[], gjuha: Gjuha = "sq"): string {
+  const emrat = DITET[gjuha];
+  if (ditet.length === 7) return gjuha === "en" ? "Every day" : "Çdo ditë";
+  if (ditet.length === 2 && ditet.includes(0) && ditet.includes(6)) {
+    return gjuha === "en" ? "Weekend" : "Fundjavë";
+  }
 
   const rresht = [...ditet].sort((a, b) => a - b);
-  if (rresht.length === 1) return DITET_SHQIP[rresht[0]];
+  if (rresht.length === 1) return emrat[rresht[0]];
 
-  return `${DITET_SHQIP[rresht[0]]} – ${DITET_SHQIP[rresht[rresht.length - 1]].toLowerCase()}`;
+  const iFundit = emrat[rresht[rresht.length - 1]];
+  return `${emrat[rresht[0]]} – ${gjuha === "en" ? iFundit : iFundit.toLowerCase()}`;
 }
 
 export function ofertaAktive(oferta: Oferta, tani = new Date()): boolean {

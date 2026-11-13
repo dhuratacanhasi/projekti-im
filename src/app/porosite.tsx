@@ -12,12 +12,14 @@ import {
   usePorosite,
 } from "@/context/PorositeContext";
 import { useTema } from "@/context/TemaContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 
 // Ndjekja e porosive: statusi përparon me kohë (demo), rifreskohet çdo 30 s.
 export default function Porosite() {
   const { porosite, pastroHistorikun } = usePorosite();
   const { addToCart } = useCart();
   const tema = useTema();
+  const { t, gjuha } = useGjuha();
   const [, setTik] = useState(0);
 
   useEffect(() => {
@@ -41,11 +43,11 @@ export default function Porosite() {
 
   function pastro() {
     Alert.alert(
-      "Fshi historikun?",
-      "Të gjitha porositë do të hiqen nga ky telefon. Ky veprim nuk kthehet.",
+      t("Fshi historikun?"),
+      t("Të gjitha porositë do të hiqen nga ky telefon. Ky veprim nuk kthehet."),
       [
-        { text: "Anulo", style: "cancel" },
-        { text: "Fshi", style: "destructive", onPress: () => pastroHistorikun() },
+        { text: t("Anulo"), style: "cancel" },
+        { text: t("Fshi"), style: "destructive", onPress: () => pastroHistorikun() },
       ]
     );
   }
@@ -56,23 +58,25 @@ export default function Porosite() {
         {porosite.length === 0 ? (
           <View style={[styles.bosh, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
             <Text style={styles.boshIkona}>📦</Text>
-            <Text style={[styles.boshTitulli, { color: tema.tekst }]}>Nuk ke porosi</Text>
+            <Text style={[styles.boshTitulli, { color: tema.tekst }]}>{t("Nuk ke porosi")}</Text>
             <Text style={[styles.boshTeksti, { color: tema.tekstDytësor }]}>
-              Pasi të porosisësh, këtu mund ta ndjekësh porosinë hap pas hapi.
+              {t("Pasi të porosisësh, këtu mund ta ndjekësh porosinë hap pas hapi.")}
             </Text>
             <TouchableOpacity
               style={[styles.butoni, { backgroundColor: tema.kryesor }]}
               onPress={() => router.navigate("/")}
             >
-              <Text style={styles.butoniTeksti}>Shiko restorantet</Text>
+              <Text style={styles.butoniTeksti}>{t("Shiko restorantet")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={styles.koka}>
-              <Text style={[styles.titulli, { color: tema.tekst }]}>Porositë e mia</Text>
+              <Text style={[styles.titulli, { color: tema.tekst }]}>{t("Porositë e mia")}</Text>
               <TouchableOpacity onPress={pastro} accessibilityRole="button">
-                <Text style={[styles.pastroTeksti, { color: tema.tekstDytësor }]}>Fshi historikun</Text>
+                <Text style={[styles.pastroTeksti, { color: tema.tekstDytësor }]}>
+                  {t("Fshi historikun")}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -89,10 +93,11 @@ export default function Porosite() {
                   <View style={styles.kartaMaja}>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.restoranti, { color: tema.tekst }]} numberOfLines={1}>
-                        {porosi.restoranti || "Porosi UniBite"}
+                        {porosi.restoranti || t("Porosi UniBite")}
                       </Text>
                       <Text style={[styles.meta, { color: tema.tekstDytësor }]}>
-                        {porosi.kodi} · {new Date(porosi.krijuar).toLocaleString("sq-AL")}
+                        {porosi.kodi} ·{" "}
+                        {new Date(porosi.krijuar).toLocaleString(gjuha === "en" ? "en-GB" : "sq-AL")}
                       </Text>
                     </View>
                     <View
@@ -107,7 +112,7 @@ export default function Porosite() {
                           { color: perfunduar ? "#15803D" : tema.kryesor },
                         ]}
                       >
-                        {HAPAT[indeksi].etiketa}
+                        {t(HAPAT[indeksi].etiketa)}
                       </Text>
                     </View>
                   </View>
@@ -146,10 +151,10 @@ export default function Porosite() {
                                 { color: aktiv ? tema.tekst : tema.tekstDytësor },
                               ]}
                             >
-                              {hap.etiketa}
+                              {t(hap.etiketa)}
                             </Text>
                             <Text style={[styles.hapiMinuta, { color: tema.tekstDytësor }]}>
-                              {hap.minuta === 0 ? "Menjëherë" : `pas ${hap.minuta} min`}
+                              {hap.minuta === 0 ? t("Menjëherë") : t("pas {n} min", { n: hap.minuta })}
                             </Text>
                           </View>
                         </View>
@@ -172,7 +177,7 @@ export default function Porosite() {
 
                   {porosi.zbritja > 0 ? (
                     <View style={styles.artikulliRresht}>
-                      <Text style={[styles.artikulli, { color: "#15803D" }]}>Zbritja e kuponit</Text>
+                      <Text style={[styles.artikulli, { color: "#15803D" }]}>{t("Zbritja e kuponit")}</Text>
                       <Text style={[styles.artikulliCmimi, { color: "#15803D" }]}>
                         −€{porosi.zbritja.toFixed(2)}
                       </Text>
@@ -180,7 +185,7 @@ export default function Porosite() {
                   ) : null}
 
                   <View style={styles.totaliRresht}>
-                    <Text style={[styles.totaliEtiketa, { color: tema.tekst }]}>Totali</Text>
+                    <Text style={[styles.totaliEtiketa, { color: tema.tekst }]}>{t("Totali")}</Text>
                     <Text style={[styles.totali, { color: tema.kryesor }]}>
                       €{porosi.totaliFundit.toFixed(2)}
                     </Text>
@@ -190,7 +195,7 @@ export default function Porosite() {
                     📍 {porosi.adresa}, {porosi.qyteti} · ☎ {porosi.telefoni}
                   </Text>
                   <Text style={[styles.adresa, { color: tema.tekstDytësor }]}>
-                    💳 {porosi.pagesa}
+                    💳 {t(porosi.pagesa)}
                   </Text>
                   {porosi.shenime ? (
                     <Text style={[styles.adresa, { color: tema.tekstDytësor }]}>
@@ -203,7 +208,7 @@ export default function Porosite() {
                     onPress={() => porositPerseri(porosi)}
                   >
                     <Text style={[styles.porositPerseriTeksti, { color: tema.kryesor }]}>
-                      🔁 Porosit përsëri
+                      {t("🔁 Porosit përsëri")}
                     </Text>
                   </TouchableOpacity>
                 </View>

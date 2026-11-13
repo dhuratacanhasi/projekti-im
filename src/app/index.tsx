@@ -21,6 +21,7 @@ import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { DEMO_RESTAURANTS } from "@/data/demo";
+import { useGjuha } from "@/i18n/GjuhaContext";
 import { bashkoKatalogun } from "@/lib/katalogu";
 import { supabase } from "@/lib/supabase";
 import { Restaurant } from "@/types";
@@ -30,6 +31,7 @@ export default function Home() {
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { qyteti, ndryshoQytetin } = useLokacioni();
   const tema = useTema();
+  const { t, eshteAnglisht } = useGjuha();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -85,9 +87,9 @@ export default function Home() {
 
   function shtoRestorant() {
     if (eshteVizitor) {
-      Alert.alert("Kërkohet llogari", "Për të shtuar restorant duhet të hyni ose të krijoni llogari.", [
-        { text: "Anulo", style: "cancel" },
-        { text: "Hyr", onPress: dilSiVizitor },
+      Alert.alert(t("Kërkohet llogari"), t("Për të shtuar restorant duhet të hyni ose të krijoni llogari."), [
+        { text: t("Anulo"), style: "cancel" },
+        { text: t("Hyr"), onPress: dilSiVizitor },
       ]);
       return;
     }
@@ -98,7 +100,7 @@ export default function Home() {
     return (
       <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
         <ActivityIndicator size="large" color={tema.kryesor} />
-        <Text style={[styles.loadingText, { color: tema.tekstDytësor }]}>Po ngarkohen restorantet...</Text>
+        <Text style={[styles.loadingText, { color: tema.tekstDytësor }]}>{t("Po ngarkohen restorantet...")}</Text>
       </View>
     );
   }
@@ -106,10 +108,10 @@ export default function Home() {
   if (error) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: tema.sfond }]}>
-        <Text style={styles.errorTitle}>Gabim</Text>
+        <Text style={styles.errorTitle}>{t("Gabim")}</Text>
         <Text style={[styles.errorText, { color: tema.tekstDytësor }]}>{error}</Text>
         <TouchableOpacity style={[styles.retryButton, { backgroundColor: tema.kryesor }]} onPress={() => fetchRestaurants()}>
-          <Text style={styles.retryButtonText}>Provo përsëri</Text>
+          <Text style={styles.retryButtonText}>{t("Provo përsëri")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -125,15 +127,15 @@ export default function Home() {
       >
         <View style={styles.headerTop}>
           <View style={styles.headerTeksti}>
-            <Text style={styles.pershendetje}>Përshëndetje 👋</Text>
-            <Text style={styles.heading}>Çka po hajmë sot?</Text>
+            <Text style={styles.pershendetje}>{t("Përshëndetje 👋")}</Text>
+            <Text style={styles.heading}>{t("Çka po hajmë sot?")}</Text>
           </View>
 
           <Pressable
             style={styles.lokacioni}
             onPress={() => setZgjedhesiHapur(true)}
             accessibilityRole="button"
-            accessibilityLabel={`Ndrysho qytetin, aktualisht ${qyteti}`}
+            accessibilityLabel={t("Ndrysho qytetin, aktualisht {qyteti}", { qyteti })}
           >
             <Text style={styles.lokacioniEmri} numberOfLines={1}>
               📍 {qyteti}
@@ -143,17 +145,19 @@ export default function Home() {
         </View>
 
         <Text style={styles.subtitle}>
-          {teFiltruara.length} restorante · {eshteVizitor ? "po shfletoni si vizitor" : "gati për porosi"}
+          {eshteVizitor
+            ? t("{n} restorante · po shfletoni si vizitor", { n: teFiltruara.length })
+            : t("{n} restorante · gati për porosi", { n: teFiltruara.length })}
         </Text>
 
         <View style={styles.headerButtons}>
           <Link href="/cart" asChild>
             <TouchableOpacity style={styles.cartButton}>
-              <Text style={styles.cartButtonText}>🛒 Shporta · {itemCount}</Text>
+              <Text style={styles.cartButtonText}>{t("🛒 Shporta · {n}", { n: itemCount })}</Text>
             </TouchableOpacity>
           </Link>
           <TouchableOpacity style={styles.addButton} onPress={shtoRestorant}>
-            <Text style={styles.addButtonText}>+ Shto</Text>
+            <Text style={styles.addButtonText}>{t("+ Shto")}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -164,7 +168,7 @@ export default function Home() {
           onPress={dilSiVizitor}
         >
           <Text style={[styles.vizitorBannerText, { color: tema.kryesor }]}>
-            Vizitor · Hyni për të porositur ose për të shtuar restorant
+            {t("Vizitor · Hyni për të porositur ose për të shtuar restorant")}
           </Text>
         </TouchableOpacity>
       )}
@@ -182,15 +186,17 @@ export default function Home() {
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Text style={styles.emptyIcon}>🍽️</Text>
-            <Text style={[styles.emptyTitle, { color: tema.tekst }]}>Nuk ka restorante në {qyteti}</Text>
+            <Text style={[styles.emptyTitle, { color: tema.tekst }]}>
+              {t("Nuk ka restorante në {qyteti}", { qyteti })}
+            </Text>
             <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>
-              Provo një qytet tjetër ose shiko të gjitha restorantet.
+              {t("Provo një qytet tjetër ose shiko të gjitha restorantet.")}
             </Text>
             <Pressable
               style={[styles.emptyButton, { backgroundColor: tema.kryesor }]}
               onPress={() => setZgjedhesiHapur(true)}
             >
-              <Text style={styles.emptyButtonText}>Ndrysho qytetin</Text>
+              <Text style={styles.emptyButtonText}>{t("Ndrysho qytetin")}</Text>
             </Pressable>
           </View>
         }
@@ -216,16 +222,22 @@ export default function Home() {
                 ) : null}
                 <View style={styles.cardMediaTekst}>
                   <Text style={styles.restaurantName} numberOfLines={1}>
-                    {item.name_sq || item.name}
+                    {eshteAnglisht
+                      ? item.name_en || item.name_sq || item.name
+                      : item.name_sq || item.name}
                   </Text>
                   {item.category ? <Text style={styles.category}>{item.category}</Text> : null}
                 </View>
               </View>
 
               <View style={styles.cardBody}>
-                {item.description_sq ? (
+                {(eshteAnglisht
+                  ? item.description_en || item.description_sq
+                  : item.description_sq) ? (
                   <Text style={[styles.description, { color: tema.tekstDytësor }]} numberOfLines={2}>
-                    {item.description_sq}
+                    {eshteAnglisht
+                      ? item.description_en || item.description_sq
+                      : item.description_sq}
                   </Text>
                 ) : null}
                 <View style={styles.cardFooter}>
@@ -253,8 +265,8 @@ export default function Home() {
         <Pressable style={styles.modalSfond} onPress={() => setZgjedhesiHapur(false)}>
           <Pressable style={styles.modalKarta} onPress={() => {}}>
             <View style={styles.modalDoreza} />
-            <Text style={styles.modalTitulli}>Zgjidh qytetin</Text>
-            <Text style={styles.modalNentitulli}>Restorantet do të filtrohen sipas qytetit.</Text>
+            <Text style={styles.modalTitulli}>{t("Zgjidh qytetin")}</Text>
+            <Text style={styles.modalNentitulli}>{t("Restorantet do të filtrohen sipas qytetit.")}</Text>
 
             {QYTETET.map((q) => {
               const zgjedhur = q === qyteti;

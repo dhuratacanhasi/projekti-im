@@ -11,12 +11,15 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { ButoniGjuhes } from "@/components/ButoniGjuhes";
 import { useVizitori } from "@/context/VizitoriContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 import { hyr, krijoLlogari } from "@/lib/sesioni";
 
 // Ekrani i hyrjes. Pas hyrjes nuk ka router.push: roja në _layout.tsx e çon vetë te lista.
 export default function Hyrja() {
   const { hyjSiVizitor } = useVizitori();
+  const { t } = useGjuha();
   const [email, setEmail] = useState("");
   const [fjalekalimi, setFjalekalimi] = useState("");
   const [mesazhi, setMesazhi] = useState<{ tekst: string; gabim: boolean } | null>(null);
@@ -24,14 +27,14 @@ export default function Hyrja() {
 
   // #region veprimi
   async function vepro(cili: "hyr" | "krijo") {
-    if (!email.trim() || !fjalekalimi) return setMesazhi({ tekst: "Shkruani email-in dhe fjalëkalimin.", gabim: true });
+    if (!email.trim() || !fjalekalimi) return setMesazhi({ tekst: t("Shkruani email-in dhe fjalëkalimin."), gabim: true });
     setDuke(true);
     setMesazhi(null);
     try {
       if (cili === "hyr") {
         await hyr(email.trim(), fjalekalimi);
       } else if ((await krijoLlogari(email.trim(), fjalekalimi)) === "konfirmo") {
-        setMesazhi({ tekst: "Llogaria u krijua. Hapni email-in, konfirmojeni, pastaj hyni.", gabim: false });
+        setMesazhi({ tekst: t("Llogaria u krijua. Hapni email-in, konfirmojeni, pastaj hyni."), gabim: false });
       }
     } catch (e) {
       setMesazhi({ tekst: (e as Error).message, gabim: true });
@@ -46,6 +49,10 @@ export default function Hyrja() {
       <View pointerEvents="none" style={[styles.rrethi, styles.rrethiNje]} />
       <View pointerEvents="none" style={[styles.rrethi, styles.rrethiDy]} />
 
+      <View style={styles.gjuha}>
+        <ButoniGjuhes />
+      </View>
+
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.permutja} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.marka}>
@@ -53,16 +60,16 @@ export default function Hyrja() {
               <Text style={styles.logojaTekst}>U</Text>
             </View>
             <Text style={styles.titulli}>UniBite</Text>
-            <Text style={styles.nentitulli}>Ushqimi i kampusit, një porosi larg.</Text>
+            <Text style={styles.nentitulli}>{t("Ushqimi i kampusit, një porosi larg.")}</Text>
           </View>
 
           <View style={styles.karta}>
-            <Text style={styles.kartaTitulli}>Mirë se vini</Text>
-            <Text style={styles.kartaNentitulli}>Hyni ose krijoni llogarinë tuaj.</Text>
+            <Text style={styles.kartaTitulli}>{t("Mirë se vini")}</Text>
+            <Text style={styles.kartaNentitulli}>{t("Hyni ose krijoni llogarinë tuaj.")}</Text>
 
             <TextInput
               style={styles.fusha}
-              placeholder="Email-i"
+              placeholder={t("Email-i")}
               placeholderTextColor="#8B7AB8"
               value={email}
               onChangeText={setEmail}
@@ -72,7 +79,7 @@ export default function Hyrja() {
             />
             <TextInput
               style={styles.fusha}
-              placeholder="Fjalëkalimi"
+              placeholder={t("Fjalëkalimi")}
               placeholderTextColor="#8B7AB8"
               value={fjalekalimi}
               onChangeText={setFjalekalimi}
@@ -83,24 +90,24 @@ export default function Hyrja() {
             {mesazhi ? <Text style={mesazhi.gabim ? styles.gabimi : styles.info}>{mesazhi.tekst}</Text> : null}
 
             <Pressable style={[styles.butoni, duke && styles.duke]} onPress={() => vepro("hyr")} disabled={duke} accessibilityRole="button">
-              <Text style={styles.butoniTekst}>{duke ? "Prisni…" : "Hyr"}</Text>
+              <Text style={styles.butoniTekst}>{duke ? t("Prisni…") : t("Hyr")}</Text>
             </Pressable>
 
             <Pressable style={[styles.dytesor, duke && styles.duke]} onPress={() => vepro("krijo")} disabled={duke} accessibilityRole="button">
-              <Text style={styles.dytesorTekst}>Krijo llogari</Text>
+              <Text style={styles.dytesorTekst}>{t("Krijo llogari")}</Text>
             </Pressable>
 
             <View style={styles.ndaresi}>
               <View style={styles.vija} />
-              <Text style={styles.ose}>ose</Text>
+              <Text style={styles.ose}>{t("ose")}</Text>
               <View style={styles.vija} />
             </View>
 
             <Pressable style={[styles.vizitor, duke && styles.duke]} onPress={hyjSiVizitor} disabled={duke} accessibilityRole="button">
-              <Text style={styles.vizitorTekst}>Vazhdo si vizitor</Text>
+              <Text style={styles.vizitorTekst}>{t("Vazhdo si vizitor")}</Text>
             </Pressable>
             <Text style={styles.vizitorShpjegim}>
-              Shfletoni restorantet pa llogari. Për të porositur, do t'ju kërkohet të hyni.
+              {t("Shfletoni restorantet pa llogari. Për të porositur, do t'ju kërkohet të hyni.")}
             </Text>
           </View>
         </ScrollView>
@@ -112,6 +119,7 @@ export default function Hyrja() {
 const styles = StyleSheet.create({
   ekrani: { flex: 1 },
   flex: { flex: 1 },
+  gjuha: { position: "absolute", top: 54, right: 18, zIndex: 10 },
   rrethi: { position: "absolute", borderRadius: 999, backgroundColor: "#ffffff" },
   rrethiNje: { width: 260, height: 260, top: -80, right: -70, opacity: 0.1 },
   rrethiDy: { width: 180, height: 180, bottom: 40, left: -60, opacity: 0.08 },

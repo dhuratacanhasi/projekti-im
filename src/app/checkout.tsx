@@ -17,6 +17,7 @@ import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { usePorosite } from "@/context/PorositeContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
+import { useGjuha } from "@/i18n/GjuhaContext";
 
 type Pagesa = "cash" | "karte";
 
@@ -27,6 +28,7 @@ export default function Checkout() {
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { qyteti, ndryshoQytetin } = useLokacioni();
   const tema = useTema();
+  const { t } = useGjuha();
   const [adresa, setAdresa] = useState("");
   const [telefoni, setTelefoni] = useState("");
   const [shenime, setShenime] = useState("");
@@ -39,34 +41,50 @@ export default function Checkout() {
 
   function porosit() {
     if (!adresa.trim()) {
-      Alert.alert("Mungon adresa", "Shkruani adresën / lokacionin e dorëzimit.");
+      Alert.alert(t("Mungon adresa"), t("Shkruani adresën / lokacionin e dorëzimit."));
       return;
     }
 
     const numri = telefoni.replace(/\D/g, "");
     if (numri.length < 6) {
-      Alert.alert("Mungon telefoni", "Shkruani një numër telefoni të saktë.");
+      Alert.alert(t("Mungon telefoni"), t("Shkruani një numër telefoni të saktë."));
       return;
     }
 
     if (items.length === 0) {
-      Alert.alert("Shporta është bosh", "Shtoni produkte para se të porosisni.");
+      Alert.alert(t("Shporta është bosh"), t("Shtoni produkte para se të porosisni."));
       return;
     }
 
     const rreshtat = items
       .map((item) => `${item.quantity}× ${item.name} — €${(item.price * item.quantity).toFixed(2)}`)
       .join("\n");
-    const metoda = pagesa === "cash" ? "Cash në dorëzim" : "Kartë në dorëzim";
-    const shenimi = shenime.trim() ? `Shënime: ${shenime.trim()}\n` : "";
+    const metoda = pagesa === "cash" ? t("Cash në dorëzim") : t("Kartë në dorëzim");
+    const shenimi = shenime.trim() ? t("Shënime: {shenime}\n", { shenime: shenime.trim() }) : "";
     const kuponTeksti =
       zbritja > 0 && kuponAktiv
-        ? `Kupon: ${kuponAktiv.kodi} (−${kuponAktiv.zbritje}%)\nZbritja: −€${zbritja.toFixed(2)}\n`
+        ? t("Kupon: {kodi} (−{zbritje}%)\nZbritja: −€{zbritjaEuro}\n", {
+            kodi: kuponAktiv.kodi,
+            zbritje: kuponAktiv.zbritje,
+            zbritjaEuro: zbritja.toFixed(2),
+          })
         : "";
 
     Alert.alert(
-      "Porosia u dërgua",
-      `Qyteti: ${qyteti}\nAdresa: ${adresa.trim()}\nTelefoni: ${telefoni.trim()}\nPagesa: ${metoda}\n${shenimi}${kuponTeksti}\n${rreshtat}\n\nTotali: €${totaliFundit.toFixed(2)}`,
+      t("Porosia u dërgua"),
+      t(
+        "Qyteti: {qyteti}\nAdresa: {adresa}\nTelefoni: {telefoni}\nPagesa: {pagesa}\n{shenime}{kupon}\n{rreshtat}\n\nTotali: €{totali}",
+        {
+          qyteti,
+          adresa: adresa.trim(),
+          telefoni: telefoni.trim(),
+          pagesa: metoda,
+          shenime: shenimi,
+          kupon: kuponTeksti,
+          rreshtat,
+          totali: totaliFundit.toFixed(2),
+        }
+      ),
       [
         {
           text: "OK",
@@ -99,8 +117,11 @@ export default function Checkout() {
               const kuponIRi = rezultati.kupon;
               setTimeout(() => {
                 Alert.alert(
-                  "Urime! 🎉",
-                  `Fitove një kupon ${kuponIRi.zbritje}% për porosinë e radhës.\nKodi: ${kuponIRi.kodi}\n\nDo të aplikohet automatikisht në checkout.`
+                  t("Urime! 🎉"),
+                  t(
+                    "Fitove një kupon {zbritje}% për porosinë e radhës.\nKodi: {kodi}\n\nDo të aplikohet automatikisht në checkout.",
+                    { zbritje: kuponIRi.zbritje, kodi: kuponIRi.kodi }
+                  )
                 );
               }, 500);
             }
@@ -114,10 +135,10 @@ export default function Checkout() {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: tema.sfond }]}>
         <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>
-          Për të porositur duhet të hyni ose të krijoni llogari.
+          {t("Për të porositur duhet të hyni ose të krijoni llogari.")}
         </Text>
         <TouchableOpacity style={[styles.primaryButton, { backgroundColor: tema.kryesor }]} onPress={dilSiVizitor}>
-          <Text style={styles.primaryButtonText}>Hyr / Krijo llogari</Text>
+          <Text style={styles.primaryButtonText}>{t("Hyr / Krijo llogari")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -126,9 +147,9 @@ export default function Checkout() {
   if (items.length === 0) {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: tema.sfond }]}>
-        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>Shporta është bosh</Text>
+        <Text style={[styles.emptyText, { color: tema.tekstDytësor }]}>{t("Shporta është bosh")}</Text>
         <TouchableOpacity style={[styles.primaryButton, { backgroundColor: tema.kryesor }]} onPress={() => router.replace("/")}>
-          <Text style={styles.primaryButtonText}>Kthehu te restorantet</Text>
+          <Text style={styles.primaryButtonText}>{t("Kthehu te restorantet")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -140,12 +161,12 @@ export default function Checkout() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.heading, { color: tema.kryesor }]}>Të dhënat e porosisë</Text>
+        <Text style={[styles.heading, { color: tema.kryesor }]}>{t("Të dhënat e porosisë")}</Text>
         <Text style={[styles.subtitle, { color: tema.tekstDytësor }]}>
-          Plotësoni adresën dhe telefonin që dorëzuesi t'ju gjejë.
+          {t("Plotësoni adresën dhe telefonin që dorëzuesi t'ju gjejë.")}
         </Text>
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Qyteti i dorëzimit</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Qyteti i dorëzimit")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -179,17 +200,17 @@ export default function Checkout() {
           })}
         </ScrollView>
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Adresa / lokacioni i dorëzimit *</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Adresa / lokacioni i dorëzimit *")}</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={adresa}
           onChangeText={setAdresa}
-          placeholder="Rruga, numri, kati, apartamenti"
+          placeholder={t("Rruga, numri, kati, apartamenti")}
           placeholderTextColor={tema.tekstDytësor}
           multiline
         />
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Numri i telefonit *</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Numri i telefonit *")}</Text>
         <TextInput
           style={[styles.input, { borderColor: tema.kufi, color: tema.tekst, backgroundColor: tema.kart }]}
           value={telefoni}
@@ -199,11 +220,11 @@ export default function Checkout() {
           keyboardType="phone-pad"
         />
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Mënyra e pagesës</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Mënyra e pagesës")}</Text>
         <View style={styles.pagesaRow}>
           {[
-            { id: "cash" as const, emri: "Cash në dorëzim" },
-            { id: "karte" as const, emri: "Kartë në dorëzim" },
+            { id: "cash" as const, emri: t("Cash në dorëzim") },
+            { id: "karte" as const, emri: t("Kartë në dorëzim") },
           ].map((opsion) => (
             <TouchableOpacity
               key={opsion.id}
@@ -229,7 +250,7 @@ export default function Checkout() {
           ))}
         </View>
 
-        <Text style={[styles.label, { color: tema.tekst }]}>Shënime (opsionale)</Text>
+        <Text style={[styles.label, { color: tema.tekst }]}>{t("Shënime (opsionale)")}</Text>
         <TextInput
           style={[
             styles.input,
@@ -238,7 +259,7 @@ export default function Checkout() {
           ]}
           value={shenime}
           onChangeText={setShenime}
-          placeholder="p.sh. pa qepë, zile 3, kati 2"
+          placeholder={t("p.sh. pa qepë, zile 3, kati 2")}
           placeholderTextColor={tema.tekstDytësor}
           multiline
         />
@@ -259,10 +280,13 @@ export default function Checkout() {
               <Text style={styles.kuponIkona}>🎟️</Text>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>
-                  Kupon −{kuponAktiv.zbritje}%
+                  {t("Kupon −{zbritje}%", { zbritje: kuponAktiv.zbritje })}
                 </Text>
                 <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
-                  Kodi: {kuponAktiv.kodi} · trokit për ta {perdorKuponin ? "hequr" : "përdorur"}
+                  {t("Kodi: {kodi} · trokit për ta {veprim}", {
+                    kodi: kuponAktiv.kodi,
+                    veprim: t(perdorKuponin ? "hequr" : "përdorur"),
+                  })}
                 </Text>
               </View>
               <View
@@ -280,9 +304,12 @@ export default function Checkout() {
           </TouchableOpacity>
         ) : (
           <View style={[styles.kuponProgres, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
-            <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>🎟️ Besnikëria UniBite</Text>
+            <Text style={[styles.kuponTitulli, { color: tema.tekst }]}>{t("🎟️ Besnikëria UniBite")}</Text>
             <Text style={[styles.kuponKodi, { color: tema.tekstDytësor }]}>
-              {progresi}/{PRAGU_KUPONIT} porosi drejt kuponit të radhës −10%
+              {t("{progresi}/{pragu} porosi drejt kuponit të radhës −10%", {
+                progresi,
+                pragu: PRAGU_KUPONIT,
+              })}
             </Text>
             <View style={[styles.progresShirit, { backgroundColor: tema.kryesorSfond }]}>
               <View
@@ -299,7 +326,7 @@ export default function Checkout() {
         )}
 
         <View style={[styles.summary, { backgroundColor: tema.kart, borderColor: tema.kufi }]}>
-          <Text style={[styles.summaryTitle, { color: tema.tekst }]}>Përmbledhja e porosisë</Text>
+          <Text style={[styles.summaryTitle, { color: tema.tekst }]}>{t("Përmbledhja e porosisë")}</Text>
           {items.map((item) => (
             <View key={item.id} style={styles.summaryRow}>
               <Text style={[styles.summaryItem, { color: tema.tekst }]}>
@@ -312,20 +339,20 @@ export default function Checkout() {
           ))}
           {zbritja > 0 ? (
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryItem, { color: tema.tekstDytësor }]}>Zbritja e kuponit</Text>
+              <Text style={[styles.summaryItem, { color: tema.tekstDytësor }]}>{t("Zbritja e kuponit")}</Text>
               <Text style={[styles.summaryPrice, { color: "#15803D", fontWeight: "700" }]}>
                 −€{zbritja.toFixed(2)}
               </Text>
             </View>
           ) : null}
           <View style={[styles.summaryTotalRow, { borderTopColor: tema.kufi }]}>
-            <Text style={[styles.summaryTotalLabel, { color: tema.tekst }]}>Totali</Text>
+            <Text style={[styles.summaryTotalLabel, { color: tema.tekst }]}>{t("Totali")}</Text>
             <Text style={[styles.summaryTotal, { color: tema.kryesor }]}>€{totaliFundit.toFixed(2)}</Text>
           </View>
         </View>
 
         <TouchableOpacity style={[styles.primaryButton, { backgroundColor: tema.kryesor }]} onPress={porosit}>
-          <Text style={styles.primaryButtonText}>Porosit dhe konfirmo</Text>
+          <Text style={styles.primaryButtonText}>{t("Porosit dhe konfirmo")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
