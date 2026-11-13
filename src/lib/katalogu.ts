@@ -1,4 +1,5 @@
 import { DEMO_MENU_ITEMS, DEMO_RESTAURANTS } from "@/data/demo";
+import { emriAnglisht, pershkrimiAnglisht } from "@/data/perkthimet-en";
 import type { MenuItem, Restaurant } from "@/types";
 
 // Fotot rezervë: përdoren kur rreshti në Supabase s'ka image_url
@@ -53,6 +54,8 @@ export function plotesoRestorantin(r: Restaurant): Restaurant {
     DEMO_RESTAURANTS.find((d) => d.id === r.id) ??
     DEMO_RESTAURANTS.find((d) => (d.name_sq || d.name || "").toLowerCase() === emri);
 
+  const pershkrimiSq = r.description_sq || demo?.description_sq || null;
+
   return {
     ...r,
     image_url: r.image_url || demo?.image_url || FOTO_RESTORANT,
@@ -61,7 +64,10 @@ export function plotesoRestorantin(r: Restaurant): Restaurant {
     category: r.category || demo?.category || null,
     delivery_time: r.delivery_time || demo?.delivery_time || null,
     rating: r.rating && r.rating > 0 ? r.rating : demo?.rating ?? null,
-    description_sq: r.description_sq || demo?.description_sq || null,
+    description_sq: pershkrimiSq,
+    // Baza e të dhënave s'ka tekst anglisht: plotësohet nga mapa e përkthimeve.
+    name_en: r.name_en || emriAnglisht(r.name_sq || r.name),
+    description_en: r.description_en || pershkrimiAnglisht(pershkrimiSq),
   };
 }
 
@@ -75,14 +81,18 @@ export function plotesoArtikullin(item: MenuItem): MenuItem {
         (d.name_sq || d.name || "").toLowerCase() === emri
     );
 
+  const pershkrimiSq = item.description_sq || demo?.description_sq || null;
+
   return {
     ...item,
     image_url:
       item.image_url ||
       demo?.image_url ||
       fotoSipasKategorise(item.category, item.name_sq || item.name),
-    description_sq: item.description_sq || demo?.description_sq || null,
+    description_sq: pershkrimiSq,
     category: item.category || demo?.category || null,
+    name_en: item.name_en || emriAnglisht(item.name_sq || item.name),
+    description_en: item.description_en || pershkrimiAnglisht(pershkrimiSq),
   };
 }
 
@@ -104,7 +114,7 @@ export function bashkoMenune(teDhenat: MenuItem[], restaurantId: string): MenuIt
   const idEkzistuese = new Set(tePlotesuara.map((m) => m.id));
   const shtesa = DEMO_MENU_ITEMS.filter(
     (m) => m.restaurant_id === restaurantId && !idEkzistuese.has(m.id)
-  );
+  ).map(plotesoArtikullin);
 
   return [...tePlotesuara, ...shtesa];
 }

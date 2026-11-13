@@ -17,7 +17,7 @@ import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 import { DEMO_MENU_ITEMS, DEMO_RESTAURANTS } from "@/data/demo";
 import { useGjuha } from "@/i18n/GjuhaContext";
-import { bashkoMenune, plotesoRestorantin } from "@/lib/katalogu";
+import { bashkoMenune, plotesoArtikullin, plotesoRestorantin } from "@/lib/katalogu";
 import { supabase } from "@/lib/supabase";
 import { MenuItem, Restaurant } from "@/types";
 
@@ -44,9 +44,12 @@ export default function RestaurantDetail() {
 
       // Vizitori lexon menunë demo; përdoruesi i kyçur lexon Supabase.
       if (eshteVizitor) {
-        setRestoranti(DEMO_RESTAURANTS.find((r) => r.id === id) ?? null);
+        const demo = DEMO_RESTAURANTS.find((r) => r.id === id);
+        setRestoranti(demo ? plotesoRestorantin(demo) : null);
         setMenuItems(
-          DEMO_MENU_ITEMS.filter((item) => item.restaurant_id === id && item.is_available !== false)
+          DEMO_MENU_ITEMS.filter(
+            (item) => item.restaurant_id === id && item.is_available !== false
+          ).map(plotesoArtikullin)
         );
         return;
       }
@@ -66,8 +69,9 @@ export default function RestaurantDetail() {
         return;
       }
 
+      const demoRest = DEMO_RESTAURANTS.find((r) => r.id === id);
       setRestoranti(
-        restData ? plotesoRestorantin(restData) : DEMO_RESTAURANTS.find((r) => r.id === id) ?? null
+        restData ? plotesoRestorantin(restData) : demoRest ? plotesoRestorantin(demoRest) : null
       );
       setMenuItems(bashkoMenune(menuData || [], id as string));
     } catch (err: any) {
