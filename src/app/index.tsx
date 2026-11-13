@@ -15,6 +15,7 @@ import {
 import { Link, router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { OfertatJaves } from "@/components/OfertatJaves";
+import { ShiritiPoshtem } from "@/components/ShiritiPoshtem";
 import { useCart } from "@/context/CartContext";
 import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
 import { useTema } from "@/context/TemaContext";
@@ -171,6 +172,7 @@ export default function Home() {
       <FlatList
         data={teFiltruara}
         keyExtractor={(item) => item.id}
+        style={{ flex: 1 }}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={<OfertatJaves />}
@@ -239,6 +241,8 @@ export default function Home() {
           </Link>
         )}
       />
+
+      <ShiritiPoshtem />
 
       <Modal
         visible={zgjedhesiHapur}

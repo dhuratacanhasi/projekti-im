@@ -10,11 +10,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { router } from "expo-router";
-
+import { Href, router } from "expo-router";
 import { useCart } from "@/context/CartContext";
 import { PRAGU_KUPONIT, useBesnikeria } from "@/context/BesnikeriaContext";
 import { QYTETET, useLokacioni } from "@/context/LokacioniContext";
+import { usePorosite } from "@/context/PorositeContext";
 import { useTema } from "@/context/TemaContext";
 import { useVizitori } from "@/context/VizitoriContext";
 
@@ -23,6 +23,7 @@ type Pagesa = "cash" | "karte";
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const { kuponAktiv, perdorKupon, regjistroPorosi, progresi } = useBesnikeria();
+  const { shtoPorosi } = usePorosite();
   const { eshteVizitor, dilSiVizitor } = useVizitori();
   const { qyteti, ndryshoQytetin } = useLokacioni();
   const tema = useTema();
@@ -30,7 +31,8 @@ export default function Checkout() {
   const [telefoni, setTelefoni] = useState("");
   const [shenime, setShenime] = useState("");
   const [pagesa, setPagesa] = useState<Pagesa>("cash");
-  const [perdorKuponin, setPerdorKuponin] = useState(false);
+  // Kuponi aplikohet automatikisht; përdoruesi mund ta heqë me një trokitje.
+  const [perdorKuponin, setPerdorKuponin] = useState(true);
 
   const zbritja = perdorKuponin && kuponAktiv ? (total * kuponAktiv.zbritje) / 100 : 0;
   const totaliFundit = Math.max(0, total - zbritja);
@@ -71,16 +73,34 @@ export default function Checkout() {
           onPress: () => {
             if (zbritja > 0 && kuponAktiv) perdorKupon(kuponAktiv.id);
 
+            shtoPorosi({
+              restorantId: items[0]?.restaurantId ?? "",
+              restoranti: items[0]?.restaurantName ?? "",
+              artikuj: items.map((item) => ({
+                emri: item.name,
+                sasia: item.quantity,
+                cmimi: item.price,
+              })),
+              totali: total,
+              zbritja,
+              totaliFundit,
+              qyteti,
+              adresa: adresa.trim(),
+              telefoni: telefoni.trim(),
+              pagesa: metoda,
+              shenime: shenime.trim(),
+            });
+
             const rezultati = regjistroPorosi();
             clearCart();
-            router.replace("/");
+            router.replace("/porosite" as Href);
 
             if (rezultati.fitoiKupon && rezultati.kupon) {
               const kuponIRi = rezultati.kupon;
               setTimeout(() => {
                 Alert.alert(
                   "Urime! 🎉",
-                  `Fitove një kupon ${kuponIRi.zbritje}% për porosinë e radhës.\nKodi: ${kuponIRi.kodi}\n\nE gjesh te Profili im.`
+                  `Fitove një kupon ${kuponIRi.zbritje}% për porosinë e radhës.\nKodi: ${kuponIRi.kodi}\n\nDo të aplikohet automatikisht në checkout.`
                 );
               }, 500);
             }

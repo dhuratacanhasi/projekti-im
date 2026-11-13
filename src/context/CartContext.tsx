@@ -7,6 +7,8 @@ export type CartItem = {
   price: number;
   quantity: number;
   restaurantId: string;
+  /** Emri i restorantit, për t'u shfaqur te ndjekja e porosisë. */
+  restaurantName?: string;
 };
 
 type CartContextType = {

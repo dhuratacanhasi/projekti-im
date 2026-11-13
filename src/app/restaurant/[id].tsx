@@ -208,6 +208,7 @@ export default function RestaurantDetail() {
                       price: Number(item.price),
                       quantity: 1,
                       restaurantId: id as string,
+                      restaurantName: restoranti?.name_sq || restoranti?.name || "",
                     });
                     Alert.alert("Shtuar", "Produkti u shtua në shportë");
                   }}

@@ -7,6 +7,7 @@ import { ButoniProfili } from "@/components/ButoniProfili";
 import { BesnikeriaProvider } from "@/context/BesnikeriaContext";
 import { CartProvider } from "@/context/CartContext";
 import { LokacioniProvider } from "@/context/LokacioniContext";
+import { PorositeProvider } from "@/context/PorositeContext";
 import { useTema } from "@/context/TemaContext";
 import { VizitoriProvider, useVizitori } from "@/context/VizitoriContext";
 import { SesioniProvider, useSesioni } from "@/lib/sesioni";
@@ -20,7 +21,9 @@ export default function RootLayout() {
         <LokacioniProvider>
           <BesnikeriaProvider>
             <CartProvider>
-              <Harta />
+              <PorositeProvider>
+                <Harta />
+              </PorositeProvider>
             </CartProvider>
           </BesnikeriaProvider>
         </LokacioniProvider>
@@ -73,6 +76,8 @@ function Harta() {
         <Stack.Screen name="restaurant/[id]" options={{ title: "Menuja" }} />
         <Stack.Screen name="cart" options={{ title: "Shporta" }} />
         <Stack.Screen name="checkout" options={{ title: "Porosia" }} />
+        <Stack.Screen name="shperblimet" options={{ title: "Shpërblimet" }} />
+        <Stack.Screen name="porosite" options={{ title: "Porositë e mia" }} />
       </Stack.Protected>
       <Stack.Protected guard={!iLejuar}>
         <Stack.Screen name="hyrja" options={{ title: "Hyrja", headerShown: false }} />
